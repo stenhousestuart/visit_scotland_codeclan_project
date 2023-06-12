@@ -1,0 +1,520 @@
+---
+title: "Visit Scotland Notebook"
+output: html_notebook
+---
+
+## Load Libraries
+
+```{r}
+library(tidyverse)
+library(here)
+```
+
+## Run Cleaning Script
+
+```{r}
+source(here("scripts/cleaning_script.R"))
+```
+
+## Read In Clean Data
+
+```{r}
+
+demographics_all <- read_csv(here("data/clean_data/all_demographics_clean.csv"))
+employment_demographics <- read_csv(here("data/clean_data/employment_demographics_clean.csv"))
+gender_demographics <- read_csv(here("data/clean_data/gender_demographics_clean.csv"))
+age_demographics <- read_csv(here("data/clean_data/age_demographics_clean.csv"))
+marital_demographics <- read_csv(here("data/clean_data/marital_status_demographics_clean.csv"))
+children_demographics <- read_csv(here("data/clean_data/children_demographics_clean.csv"))
+car_demographics <- read_csv(here("data/clean_data/car_demographics_clean.csv"))
+social_demographics <- read_csv(here("data/clean_data/social_demographics_clean.csv"))
+regional_domestic_tourism <- read_csv(here("data/clean_data/regional_domestic_tourism_clean.csv"))
+
+```
+
+## Temporal Analysis
+
+### Total Visits Over Time
+
+```{r}
+
+# Total Visits Over Time
+
+demographics_all %>% 
+  ggplot(aes(x = year, y = visits, group = 1)) +
+  geom_line(size = 1, colour = "grey") +
+  geom_point(aes(colour = visits_change_label), 
+             show.legend = FALSE,
+             size = 4) +
+  labs(x = "\n Year",
+       y = "No. of Visits (Million) \n",
+       title = "Number of Visits Over Time") +
+  scale_y_continuous(limits = c(0, 200), breaks = c(0, 100, 200)) +
+  scale_x_continuous(breaks = c(2013, 2014, 2015, 2016, 2017, 2018, 2019))
+```
+
+### Total Expenditure Over Time
+
+```{r}
+
+# Total Expenditure Over Time
+
+demographics_all %>% 
+  ggplot(aes(x = year, y = expenditure, group = 1)) +
+  geom_line(size = 1, colour = "grey") +
+  geom_point(aes(colour = exp_change_label), 
+             show.legend = FALSE,
+             size = 4) +
+  labs(x = "\n Year",
+       y = "Expenditure (Million) \n",
+       title = "Expenditure Over Time") +
+  scale_y_continuous(limits = c(0, 6500), breaks = c(0, 2000, 4000, 6000)) +
+  scale_x_continuous(breaks = c(2013, 2014, 2015, 2016, 2017, 2018, 2019))
+
+```
+### Expenditure Per Visit Over Time
+
+```{r}
+
+# Expenditure Per Visit Over Time
+
+demographics_all %>% 
+  ggplot(aes(x = year, y = exp_per_visit, group = 1)) +
+  geom_line(size = 1, colour = "grey") +
+  geom_point(aes(colour = exp_per_visit_label), 
+             show.legend = FALSE,
+             size = 4) +
+  labs(x = "\n Year",
+       y = "Expenditure (Millions) per Visit (Millions) \n",
+       title = "Expenditure To Visit Ratio \n") +
+  scale_y_continuous(limits = c(0, 60), breaks = c(0, 20, 40, 60)) +
+  scale_x_continuous(breaks = c(2013, 2014, 2015, 2016, 2017, 2018, 2019))
+
+```
+
+## Demographic Analysis
+
+- Highest Mean Spend Per Visit (2013-2018) vs. 2019
+- Highest Mean Spend Per Visit.
+
+### Age
+
+Spend Per Visit Over Period: 45-54
+Spend Per Visit (2013-2018) vs. 2019: 
+- Increase in 25-34, 35-44, 55-64, 65+
+- Interesting decrease in 45-54 despite being highest mean across all years.
+
+Conclusion: May suggest that there is scope for growth in other age groups, but not in 45-54.
+
+```{r}
+age_demographics %>%
+  group_by(age) %>% 
+  summarise(mean_exp_per_visit = mean(exp_per_visit)) %>% 
+  ggplot() +
+  geom_col(aes(x = age, y = mean_exp_per_visit, fill = age == "45-54 years"),
+           show.legend = FALSE) +
+  scale_fill_manual(values = c("FALSE" = "grey40",
+                               "TRUE" = "forestgreen")) +
+  labs(
+    x = "\n Age",
+    y = "Mean Expenditure per Visit \n",
+    title = "Mean Expenditure per Visit 2013-2019",
+    subtitle = "By Age Group")
+```
+
+```{r}
+
+age_demographics %>% 
+  mutate(is_2019 = if_else(year == 2019, "2019", "2013-2018")) %>% 
+  group_by(age, is_2019) %>%
+  arrange(age) %>% 
+  summarise(mean_exp_per_visit = mean(exp_per_visit)) %>% 
+  mutate(difference_exp_per_visit = mean_exp_per_visit - lag(mean_exp_per_visit),
+         difference_exp_per_visit_pct = (mean_exp_per_visit - lag(mean_exp_per_visit)) / lag(mean_exp_per_visit) * 100,
+         difference_exp_per_visit_label = if_else(difference_exp_per_visit > 0, "Increased", "Decreased")) %>% 
+  filter(difference_exp_per_visit != is.na(difference_exp_per_visit)) %>% 
+  ggplot(aes(x = age, y = difference_exp_per_visit)) +
+  geom_col(aes(fill = difference_exp_per_visit_label), show.legend = FALSE) +
+  geom_text(aes(label = str_c(floor(difference_exp_per_visit_pct), "%"), vjust = -0.5)) +
+  scale_fill_manual(values = c("Increased" = "forestgreen",
+                               "Decreased" = "firebrick")) +
+  labs(
+    x = "\n Age",
+    y = "Mean Expenditure per Visit \n",
+    title = "Mean Expenditure per Visit, 2019 vs. 2013-2018",
+    subtitle = "By Age Group")
+
+```
+
+### Gender
+
+Highest Mean Spend Per Visit Over Period: Little difference between male and female spend per visit.
+Mean Spend Per Visit (2013-2018) vs. 2019: Both Increased.
+
+Conclusion: Little difference between genders, both show potential for growth.
+
+```{r}
+gender_demographics %>%
+  group_by(gender) %>% 
+  summarise(mean_exp_per_visit = mean(exp_per_visit)) %>% 
+  ggplot() +
+  geom_col(aes(x = gender, y = mean_exp_per_visit, fill = gender == "Male"),
+           show.legend = FALSE) +
+  scale_fill_manual(values = c("FALSE" = "grey40",
+                               "TRUE" = "forestgreen")) +
+  labs(
+    x = "\n Gender",
+    y = "Mean Expenditure per Visit \n",
+    title = "Mean Expenditure per Visit 2013-2019",
+    subtitle = "By Gender")
+```
+
+
+```{r}
+gender_demographics %>% 
+  mutate(is_2019 = if_else(year == 2019, "2019", "2013-2018")) %>% 
+  group_by(gender, is_2019) %>%
+  summarise(mean_exp_per_visit = mean(exp_per_visit)) %>% 
+  mutate(difference_exp_per_visit = mean_exp_per_visit - lag(mean_exp_per_visit),
+         difference_exp_per_visit_pct = (mean_exp_per_visit - lag(mean_exp_per_visit)) / lag(mean_exp_per_visit) * 100,
+         difference_exp_per_visit_label = if_else(difference_exp_per_visit > 0, "Increased", "Decreased")) %>% 
+  filter(difference_exp_per_visit != is.na(difference_exp_per_visit)) %>% 
+  ggplot(aes(x = gender, y = difference_exp_per_visit)) +
+  geom_col(aes(fill = difference_exp_per_visit_label), show.legend = FALSE) +
+  geom_text(aes(label = str_c(floor(difference_exp_per_visit_pct), "%"), vjust = -0.5)) +
+  scale_fill_manual(values = c("Increased" = "forestgreen",
+                               "Decreased" = "firebrick")) +
+  labs(
+    x = "\n Gender",
+    y = "Mean Expenditure per Visit \n",
+    title = "Mean Expenditure per Visit, 2019 vs. 2013-2018",
+    subtitle = "By Gender")
+```
+
+
+### Marital Status
+
+Highest Mean Spend Per Visit Over Period: Married people spend more than un-married.
+Mean Spend Per Visit (2013-2018) vs. 2019: Both Increased.
+
+Conclusion: Although married people were already spending the most per visit, their spend increased by a larger amount in 2019 than un-married people, suggesting there is still plenty of room for growth.
+
+```{r}
+marital_demographics %>%
+  group_by(marital_status) %>% 
+  summarise(mean_exp_per_visit = mean(exp_per_visit)) %>% 
+  ggplot() +
+  geom_col(aes(x = marital_status, y = mean_exp_per_visit, fill = marital_status == "Married"),
+           show.legend = FALSE) +
+  scale_fill_manual(values = c("FALSE" = "grey40",
+                               "TRUE" = "forestgreen")) +
+  labs(
+    x = "\n Marital Status",
+    y = "Mean Expenditure per Visit \n",
+    title = "Mean Expenditure per Visit 2013-2019",
+    subtitle = "By Marital Status")
+```
+
+
+```{r}
+marital_demographics %>% 
+  mutate(is_2019 = if_else(year == 2019, "2019", "2013-2018")) %>% 
+  group_by(marital_status, is_2019) %>%
+  summarise(mean_exp_per_visit = mean(exp_per_visit)) %>% 
+  mutate(difference_exp_per_visit = mean_exp_per_visit - lag(mean_exp_per_visit),
+         difference_exp_per_visit_pct = (mean_exp_per_visit - lag(mean_exp_per_visit)) / lag(mean_exp_per_visit) * 100,
+         difference_exp_per_visit_label = if_else(difference_exp_per_visit > 0, "Increased", "Decreased")) %>% 
+  filter(difference_exp_per_visit != is.na(difference_exp_per_visit)) %>% 
+  ggplot(aes(x = marital_status, y = difference_exp_per_visit)) +
+  geom_col(aes(fill = difference_exp_per_visit_label), show.legend = FALSE) +
+  geom_text(aes(label = str_c(floor(difference_exp_per_visit_pct), "%"), vjust = -0.5)) +
+  scale_fill_manual(values = c("Increased" = "forestgreen",
+                               "Decreased" = "firebrick")) +
+  labs(
+    x = "\n Marital Status",
+    y = "Mean Expenditure per Visit \n",
+    title = "Mean Expenditure per Visit, 2019 vs. 2013-2018",
+    subtitle = "By Marital Status")
+```
+
+### Children
+
+Highest Mean Spend Per Visit Over Period: People with children spent more per visit than people without.
+Mean Spend Per Visit (2013-2018) vs. 2019: Both Increased.
+
+Conclusion: Although people with children spend more per visit than people without, both categories increased spending per visit in 2019 suggesting there is room for growth in both areas.
+
+```{r}
+children_demographics %>%
+  group_by(children) %>% 
+  summarise(mean_exp_per_visit = mean(exp_per_visit)) %>% 
+  ggplot() +
+  geom_col(aes(x = children, y = mean_exp_per_visit, fill = children == "Yes - Children"),
+           show.legend = FALSE) +
+  scale_fill_manual(values = c("FALSE" = "grey40",
+                               "TRUE" = "forestgreen")) +
+  labs(
+    x = "\n Children",
+    y = "Mean Expenditure per Visit \n",
+    title = "Mean Expenditure per Visit 2013-2019",
+    subtitle = "By Children")
+```
+
+```{r}
+children_demographics %>% 
+  mutate(is_2019 = if_else(year == 2019, "2019", "2013-2018")) %>% 
+  group_by(children, is_2019) %>%
+  summarise(mean_exp_per_visit = mean(exp_per_visit)) %>% 
+  mutate(difference_exp_per_visit = mean_exp_per_visit - lag(mean_exp_per_visit),
+         difference_exp_per_visit_pct = (mean_exp_per_visit - lag(mean_exp_per_visit)) / lag(mean_exp_per_visit) * 100,
+         difference_exp_per_visit_label = if_else(difference_exp_per_visit > 0, "Increased", "Decreased")) %>% 
+  filter(difference_exp_per_visit != is.na(difference_exp_per_visit)) %>% 
+  ggplot(aes(x = children, y = difference_exp_per_visit)) +
+  geom_col(aes(fill = difference_exp_per_visit_label), show.legend = FALSE) +
+  geom_text(aes(label = str_c(floor(difference_exp_per_visit_pct), "%"), vjust = -0.5)) +
+  scale_fill_manual(values = c("Increased" = "forestgreen",
+                               "Decreased" = "firebrick")) +
+  labs(
+    x = "\n Children",
+    y = "Mean Expenditure per Visit \n",
+    title = "Mean Expenditure per Visit, 2019 vs. 2013-2018",
+    subtitle = "By Children")
+```
+
+### Employment
+
+Highest Mean Spend Per Visit Over Period: People in employment have the highest average spend per visit.
+Mean Spend Per Visit (2013-2018) vs. 2019: All Increased.
+
+Conclusion: Although people in employment have the highest spend per visit there was rleatively little growth in this area in 2019. By comparison both other categories increase their spend per visit suggesting theire is potential for growth in these areas.
+
+```{r}
+employment_demographics %>%
+  group_by(employment_status) %>% 
+  summarise(mean_exp_per_visit = mean(exp_per_visit)) %>% 
+  ggplot() +
+  geom_col(aes(x = employment_status, y = mean_exp_per_visit, fill = employment_status == "Employed/self-employed (full or part time)"),
+           show.legend = FALSE) +
+  scale_fill_manual(values = c("FALSE" = "grey40",
+                               "TRUE" = "forestgreen")) +
+  labs(
+    x = "\n Employment",
+    y = "Mean Expenditure per Visit \n",
+    title = "Mean Expenditure per Visit 2013-2019",
+    subtitle = "By Employment")
+```
+
+```{r}
+employment_demographics %>% 
+  mutate(is_2019 = if_else(year == 2019, "2019", "2013-2018")) %>% 
+  group_by(employment_status, is_2019) %>%
+  summarise(mean_exp_per_visit = mean(exp_per_visit)) %>% 
+  mutate(difference_exp_per_visit = mean_exp_per_visit - lag(mean_exp_per_visit),
+         difference_exp_per_visit_pct = (mean_exp_per_visit - lag(mean_exp_per_visit)) / lag(mean_exp_per_visit) * 100,
+         difference_exp_per_visit_label = if_else(difference_exp_per_visit > 0, "Increased", "Decreased")) %>% 
+  filter(difference_exp_per_visit != is.na(difference_exp_per_visit)) %>% 
+  ggplot(aes(x = employment_status, y = difference_exp_per_visit)) +
+  geom_col(aes(fill = difference_exp_per_visit_label), show.legend = FALSE) +
+  geom_text(aes(label = str_c(floor(difference_exp_per_visit_pct), "%"), vjust = -0.5)) +
+  scale_fill_manual(values = c("Increased" = "forestgreen",
+                               "Decreased" = "firebrick")) +
+  labs(
+    x = "\n Employment Status",
+    y = "Mean Expenditure per Visit \n",
+    title = "Mean Expenditure per Visit, 2019 vs. 2013-2018",
+    subtitle = "By Employment Status")
+```
+
+### Car Access
+
+Highest Mean Spend Per Visit Over Period: People with access to a car spent more per visit on average.
+Mean Spend Per Visit (2013-2018) vs. 2019: Both Increased.
+
+Conclusion: Although people with access to a car spend more per visit, spend per visit amongst those without access to a car increased by more than those with a car. Highlights potential growth in this areas and particuarly related to transport.
+
+```{r}
+car_demographics %>%
+  group_by(access_to_car) %>% 
+  summarise(mean_exp_per_visit = mean(exp_per_visit)) %>% 
+  ggplot() +
+  geom_col(aes(x = access_to_car, y = mean_exp_per_visit, fill = access_to_car == "Access to car (1+)"),
+           show.legend = FALSE) +
+  scale_fill_manual(values = c("FALSE" = "grey40",
+                               "TRUE" = "forestgreen")) +
+  labs(
+    x = "\n Car Access",
+    y = "Mean Expenditure per Visit \n",
+    title = "Mean Expenditure per Visit 2013-2019",
+    subtitle = "By Car Access")
+```
+```{r}
+car_demographics %>% 
+  mutate(is_2019 = if_else(year == 2019, "2019", "2013-2018")) %>% 
+  group_by(access_to_car, is_2019) %>%
+  summarise(mean_exp_per_visit = mean(exp_per_visit)) %>% 
+  mutate(difference_exp_per_visit = mean_exp_per_visit - lag(mean_exp_per_visit),
+         difference_exp_per_visit_pct = (mean_exp_per_visit - lag(mean_exp_per_visit)) / lag(mean_exp_per_visit) * 100,
+         difference_exp_per_visit_label = if_else(difference_exp_per_visit > 0, "Increased", "Decreased")) %>% 
+  filter(difference_exp_per_visit != is.na(difference_exp_per_visit)) %>% 
+  ggplot(aes(x = access_to_car, y = difference_exp_per_visit)) +
+  geom_col(aes(fill = difference_exp_per_visit_label), show.legend = FALSE) +
+  geom_text(aes(label = str_c(floor(difference_exp_per_visit_pct), "%"), vjust = -0.5)) +
+  scale_fill_manual(values = c("Increased" = "forestgreen",
+                               "Decreased" = "firebrick")) +
+  labs(
+    x = "\n Access To Car",
+    y = "Mean Expenditure per Visit \n",
+    title = "Mean Expenditure per Visit, 2019 vs. 2013-2018",
+    subtitle = "By Access To Car")
+```
+
+### Social Grade
+
+AB	Higher & intermediate managerial, administrative, professional occupations.
+C1	Supervisory, clerical & junior managerial, administrative, professional occupations.
+C2	Skilled manual occupations.
+DE	Semi-skilled & unskilled manual occupations, Unemployed and lowest grade occupations.
+
+```{r}
+social_demographics %>%
+  group_by(social_grade) %>% 
+  summarise(mean_exp_per_visit = mean(exp_per_visit)) %>% 
+  ggplot() +
+  geom_col(aes(x = social_grade, y = mean_exp_per_visit, fill = social_grade == "AB"),
+           show.legend = FALSE) +
+  scale_fill_manual(values = c("FALSE" = "grey40",
+                               "TRUE" = "forestgreen")) +
+  labs(
+    x = "\n Social Gradee",
+    y = "Mean Expenditure per Visit \n",
+    title = "Mean Expenditure per Visit 2013-2019",
+    subtitle = "By Social Grade")
+```
+
+```{r}
+social_demographics %>% 
+  mutate(is_2019 = if_else(year == 2019, "2019", "2013-2018")) %>% 
+  group_by(social_grade, is_2019) %>%
+  summarise(mean_exp_per_visit = mean(exp_per_visit)) %>% 
+  mutate(difference_exp_per_visit = mean_exp_per_visit - lag(mean_exp_per_visit),
+         difference_exp_per_visit_pct = (mean_exp_per_visit - lag(mean_exp_per_visit)) / lag(mean_exp_per_visit) * 100,
+         difference_exp_per_visit_label = if_else(difference_exp_per_visit > 0, "Increased", "Decreased")) %>% 
+  filter(difference_exp_per_visit != is.na(difference_exp_per_visit)) %>% 
+  ggplot(aes(x = social_grade, y = difference_exp_per_visit)) +
+  geom_col(aes(fill = difference_exp_per_visit_label), show.legend = FALSE) +
+  geom_text(aes(label = str_c(floor(difference_exp_per_visit_pct), "%"), vjust = -0.5)) +
+  scale_fill_manual(values = c("Increased" = "forestgreen",
+                               "Decreased" = "firebrick")) +
+  labs(
+    x = "\n Social Grade",
+    y = "Mean Expenditure per Visit \n",
+    title = "Mean Expenditure per Visit, 2019 vs. 2013-2018",
+    subtitle = "By Social Grade")
+```
+
+## Domestic & International Visitors
+
+### Domestic vs. International
+
+```{r}
+domestic_2017_2019_visits <- regional_domestic_tourism %>% 
+  filter(date_code == "2017-2019",
+         region_of_residence == "All of GB") %>% 
+  select(visits)
+  
+
+international_2017_2019_visits <- international_visits %>%
+  select(-c(quarter, age, sample)) %>%
+  filter(year %in% c(2017, 2018, 2019)) %>% 
+  summarise(total_visits = sum(visits)) %>% 
+  select(total_visits)
+
+tibble(a = c("Domestic", "International"),
+       b = c(domestic_2017_2019_visits$visits, international_2017_2019_visits$total_visits)) %>% 
+  ggplot() +
+  geom_col(aes(x = a, y = b)) +
+  labs(
+    x = "",
+    y = "Visits \n",
+    title = "Domestic vs. International Visits",
+    subtitle = "2017-2019")
+```
+
+```{r}
+domestic_2017_2019 <- regional_domestic_tourism %>% 
+  filter(date_code == "2017-2019",
+         region_of_residence == "All of GB") %>% 
+  select(expenditure)
+  
+
+international_2017_2019 <- international_visits %>%
+  select(-c(quarter, age, sample)) %>%
+  filter(year %in% c(2017, 2018, 2019)) %>% 
+  summarise(total_visits = sum(visits),
+            total_spend = sum(spend),
+            exp_per_visit = total_spend / total_visits) %>% 
+  select(total_spend)
+
+tibble(a = c("Domestic", "International"),
+       b = c(domestic_2017_2019$expenditure, international_2017_2019$total_spend)) %>% 
+  ggplot() +
+  geom_col(aes(x = a, y = b)) +
+  labs(
+    x = "",
+    y = "Expenditure \n",
+    title = "Domestic vs. International Expenditure",
+    subtitle = "2017-2019")
+```
+### International
+
+```{r}
+international_visits %>% 
+  select(-c(quarter, age, sample)) %>%
+  filter(country %in% c("USA", "Germany", "Australia", "France", "China"),
+         year %in% c(2013, 2014, 2015, 2016, 2017, 
+                                2018, 2019)) %>% 
+  group_by(year, country) %>% 
+  summarise(total_spend = sum(spend)) %>% 
+  ggplot(aes(x = year, y = total_spend, colour = country)) +
+  geom_line() +
+  geom_point() +
+  scale_x_continuous(breaks = c(2013, 2014, 2015, 2016, 2017, 
+                                2018, 2019)) +
+  labs(x = "\n Year",
+       y = "Expenditure (Million) \n",
+       title = "Expenditure by Country",
+       subtitle = "Top 5 Countries per Total Expenditure")
+```
+
+```{r}
+international_visits %>% 
+  select(-c(quarter, age, sample)) %>%
+  filter(country %in% c("USA", "Germany", "France", "Netherlands", "Australia"),
+         year %in% c(2013, 2014, 2015, 2016, 2017, 
+                                2018, 2019)) %>% 
+  group_by(year, country) %>% 
+  summarise(total_visits = sum(visits)) %>% 
+  ggplot(aes(x = year, y = total_visits, colour = country)) +
+  geom_line() +
+  geom_point() +
+  scale_x_continuous(breaks = c(2013, 2014, 2015, 2016, 2017, 
+                                2018, 2019)) +
+  labs(x = "\n Year",
+       y = "Visits (Million) \n",
+       title = "Visits by Country",
+       subtitle = "Top 5 Countries per Visits")
+```
+
+
+### Domestic
+
+
+
+
+
+
+
+
+
+
+

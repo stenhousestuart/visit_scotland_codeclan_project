@@ -1,0 +1,192 @@
+
+# Libraries ---------------------------------------------------------------
+
+library(tidyverse)
+library(janitor)
+library(here)
+library(readxl)
+
+# Read In Raw Data ------------------------------------------------------------
+
+demographics <- read_csv("data/raw_data/tourism_day_visits_demographics.csv") %>% 
+  clean_names()
+
+regional_domestic_tourism <- read_csv("data/raw_data/regional_domestic_tourism.csv") %>%
+  clean_names()
+
+international_visits <- read_csv("data/raw_data/international-passenger-survey-scotland-2019.csv") %>%
+  clean_names()
+
+# domestic_day_visits <- read_excel("data/raw_data/gbdvs-2019-scotland-and-gb.xlsx") %>% 
+#   clean_names()
+#
+
+# activities <- read_csv("data/raw_data/tourism_day_visits_activities.csv") %>% 
+#   clean_names()
+
+# location <- read_csv("data/raw_data/tourism_day_visits_location.csv") %>% 
+#   clean_names()
+# 
+# transport <- read_csv("data/raw_data/tourism_day_visits_transport.csv") %>% 
+#   clean_names()
+# 
+# accomodation_occupancy <- read_csv("data/raw_data/scottish_accomodation_occupancy.csv") %>% 
+#   clean_names()
+# 
+
+
+# Clean Demographic Data ------------------------------------------------------------
+
+all_demographics_clean <- demographics %>%
+  filter(age == "All", marital_status == "All", gender == "All", employment_status == "All",
+         children == "All",  access_to_car == "All", social_grade == "All") %>%
+  select(-c(measurement, units)) %>% 
+  pivot_wider(names_from = breakdown_of_domestic_tourism, values_from = value) %>%
+  arrange(date_code) %>% 
+  mutate(exp_per_visit = Expenditure / Visits,
+         exp_per_visit_pct_change = (exp_per_visit - lag(exp_per_visit)) / lag(exp_per_visit) * 100,
+         visits_change_label = case_when(Visits > lag(Visits) ~ "Increased",
+                                         Visits < lag(Visits) ~ "Decreased",
+                                         Visits == lag(Visits) ~ "No Change",
+                                         TRUE ~ "Starting Year"),
+         exp_change_label = case_when(Expenditure > lag(Expenditure) ~ "Increased",
+                                      Expenditure < lag(Expenditure) ~ "Decreased",
+                                      Expenditure == lag(Expenditure) ~ "No Change",
+                                      TRUE ~ "Starting Year"),
+         exp_per_visit_label = case_when(exp_per_visit > lag(exp_per_visit) ~ "Increased",
+                                         exp_per_visit < lag(exp_per_visit) ~ "Decreased",
+                                         exp_per_visit == lag(exp_per_visit) ~ "No Change",
+                                         TRUE ~ "Starting Year")) %>% 
+  select(date_code, Visits, Expenditure, exp_per_visit, exp_per_visit_pct_change, 
+         visits_change_label, exp_change_label, exp_per_visit_label) %>% 
+  rename(year = date_code) %>% 
+  clean_names()
+
+employment_demographics_clean <- demographics %>%
+  select(-c(feature_code, age, marital_status, gender, children, access_to_car, 
+            social_grade, measurement, units)) %>% 
+  filter(employment_status != "All") %>% 
+  pivot_wider(names_from = breakdown_of_domestic_tourism, values_from = value) %>%
+  arrange(date_code) %>% 
+  mutate(exp_per_visit = Expenditure / Visits) %>% 
+  select(date_code, employment_status, Visits, Expenditure, exp_per_visit) %>% 
+  rename(year = date_code) %>% 
+  clean_names()
+
+gender_demographics_clean <- demographics %>%
+  select(-c(feature_code, age, marital_status, children, access_to_car, 
+            social_grade, measurement, units, employment_status)) %>% 
+  filter(gender != "All") %>% 
+  pivot_wider(names_from = breakdown_of_domestic_tourism, values_from = value) %>%
+  arrange(date_code) %>% 
+  mutate(exp_per_visit = Expenditure / Visits) %>% 
+  select(date_code, gender, Visits, Expenditure, exp_per_visit) %>% 
+  rename(year = date_code) %>% 
+  clean_names()
+
+age_demographics_clean <- demographics %>%
+  select(-c(feature_code, gender, marital_status, children, access_to_car, 
+            social_grade, measurement, units, employment_status)) %>% 
+  filter(age != "All") %>% 
+  pivot_wider(names_from = breakdown_of_domestic_tourism, values_from = value) %>%
+  arrange(date_code) %>% 
+  mutate(exp_per_visit = Expenditure / Visits) %>% 
+  select(date_code, age, Visits, Expenditure, exp_per_visit) %>% 
+  rename(year = date_code) %>% 
+  clean_names()
+
+marital_status_demographics_clean <- demographics %>%
+  select(-c(feature_code, gender, age, children, access_to_car, 
+            social_grade, measurement, units, employment_status)) %>% 
+  filter(marital_status != "All") %>% 
+  pivot_wider(names_from = breakdown_of_domestic_tourism, values_from = value) %>%
+  arrange(date_code) %>% 
+  mutate(exp_per_visit = Expenditure / Visits) %>% 
+  select(date_code, marital_status, Visits, Expenditure, exp_per_visit) %>% 
+  rename(year = date_code) %>% 
+  clean_names()
+
+children_demographics_clean <- demographics %>%
+  select(-c(feature_code, gender, age, marital_status, access_to_car, 
+            social_grade, measurement, units, employment_status)) %>% 
+  filter(children != "All") %>% 
+  pivot_wider(names_from = breakdown_of_domestic_tourism, values_from = value) %>%
+  arrange(date_code) %>% 
+  mutate(exp_per_visit = Expenditure / Visits) %>% 
+  select(date_code, children, Visits, Expenditure, exp_per_visit) %>% 
+  rename(year = date_code) %>% 
+  clean_names()
+
+car_demographics_clean <- demographics %>%
+  select(-c(feature_code, gender, age, marital_status, children, 
+            social_grade, measurement, units, employment_status)) %>% 
+  filter(access_to_car != "All") %>% 
+  pivot_wider(names_from = breakdown_of_domestic_tourism, values_from = value) %>%
+  arrange(date_code) %>% 
+  mutate(exp_per_visit = Expenditure / Visits) %>% 
+  select(date_code, access_to_car, Visits, Expenditure, exp_per_visit) %>% 
+  rename(year = date_code) %>% 
+  clean_names()
+
+social_demographics_clean <- demographics %>%
+  select(-c(feature_code, gender, age, marital_status, children, 
+            access_to_car, measurement, units, employment_status)) %>% 
+  filter(social_grade != "All") %>% 
+  pivot_wider(names_from = breakdown_of_domestic_tourism, values_from = value) %>%
+  arrange(date_code, social_grade) %>% 
+  mutate(exp_per_visit = Expenditure / Visits) %>% 
+  select(date_code, social_grade, Visits, Expenditure, exp_per_visit) %>% 
+  rename(year = date_code) %>% 
+  clean_names()
+
+
+# Clean Domestic Day Visit Data ------------------------------------------------------------
+
+# domestic_day_visits_clean <- domestic_day_visits %>% 
+#   filter(regions == "Scotland") %>% 
+#   mutate(toursism_exp_per_visit = tourism_day_visit_spend_m / tourism_day_visits_m,
+#          toursism_exp_per_visit_pct_change = (toursism_exp_per_visit - lag(toursism_exp_per_visit)) / lag(toursism_exp_per_visit) * 100,
+#          leisure_exp_per_visit = leisure_day_visits_spend_m / leisure_day_visits_m,
+#          leisure_exp_per_visit_pct_change = (leisure_exp_per_visit - lag(leisure_exp_per_visit)) / lag(leisure_exp_per_visit) * 100)
+
+# Clean Regional Domestic Tourism Data (Overnights) ------------------------------------------------------------
+
+regional_domestic_tourism_clean <- regional_domestic_tourism %>%
+  filter(feature_code == "S92000003") %>%
+  arrange(date_code) %>% 
+  select(-c(measurement, units)) %>% 
+  pivot_wider(names_from = breakdown_of_domestic_tourism, values_from = value) %>% 
+  clean_names()
+
+# Clean International Domestic Tourism Data (Overnights) ------------------------------------------------------------
+
+
+
+# Write Clean Data To .CSV -----------------------------------------------------------
+
+write_csv(all_demographics_clean, here("data/clean_data/all_demographics_clean.csv"))
+write_csv(employment_demographics_clean, here("data/clean_data/employment_demographics_clean.csv"))
+write_csv(gender_demographics_clean, here("data/clean_data/gender_demographics_clean.csv"))
+write_csv(age_demographics_clean, here("data/clean_data/age_demographics_clean.csv"))
+write_csv(marital_status_demographics_clean, here("data/clean_data/marital_status_demographics_clean.csv"))
+write_csv(children_demographics_clean, here("data/clean_data/children_demographics_clean.csv"))
+write_csv(car_demographics_clean, here("data/clean_data/car_demographics_clean.csv"))
+write_csv(social_demographics_clean, here("data/clean_data/social_demographics_clean.csv"))
+# write_csv(domestic_day_visits_clean, here("data/clean_data/domestic_day_visits_clean.csv"))
+write_csv(regional_domestic_tourism_clean, here("data/clean_data/regional_domestic_tourism_clean.csv"))
+
+# Remove Objects from Environment -----------------------------------------------------------
+
+rm(demographics)
+rm(all_demographics_clean)
+rm(employment_demographics_clean)
+rm(gender_demographics_clean)
+rm(age_demographics_clean)
+rm(marital_status_demographics_clean)
+rm(children_demographics_clean)
+rm(car_demographics_clean)
+rm(social_demographics_clean)
+# rm(domestic_day_visits)
+# rm(domestic_day_visits_clean)
+rm(regional_domestic_tourism)
+rm(regional_domestic_tourism_clean)
