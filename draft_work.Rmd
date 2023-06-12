@@ -1,0 +1,80 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+international_visits %>%
+  group_by(year, quarter, country) %>%
+  summarise(total_visits = sum(visits),
+            total_spend = sum(spend)) %>% 
+  ggplot(aes(x = total_visits, y = total_spend)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+
+
+```{r}
+demographics_all %>% 
+  ggplot(aes(x = visits, y = expenditure)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+
+```{r}
+
+ips_2002_2019 %>% 
+  ggplot(aes(x = visits, y = spend)) + 
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(
+    x = "Visits (Million)",
+    y = "Expenditure (£Million) \n",
+    title = "Scotland: International Visits vs. Spend",
+    subtitle = "2012-2019")
+  
+```
+
+```{r}
+
+model <- lm(formula = spend ~ visits, data = ips_2002_2019)
+
+model2 <- lm(formula = spend ~ visits + nights, data = ips_2002_2019)
+
+```
+
+```{r}
+summary(model)
+```
+
+```{r}
+summary(model2)
+```
+
+```{r}
+library(modelr)
+```
+
+
+```{r}
+
+ips_2002_2019 %>%
+  add_predictions(model) %>%
+  add_residuals(model) %>% 
+  ggplot(aes(x = visits, y = spend)) +
+  geom_point() +
+  geom_line(aes(y = pred), col = "red") +
+  annotate("text", x = 1675, y = 2500, label = "spend ~ visits") +
+  annotate("text", x = 1930, y = 2300, label = "b1 = 0.81800 / p-value = 4.78e-06") +
+  annotate("text", x = 2170, y = 2100, label = "R-Squared = 0.8876 / Residual Standard Error: 183.3")
+
+```
+
+```{r}
+library(ggfortify)
+```
+
+```{r}
+autoplot(model)
+```
+
