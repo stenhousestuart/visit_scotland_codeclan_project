@@ -158,9 +158,18 @@ regional_domestic_tourism_clean <- regional_domestic_tourism %>%
   pivot_wider(names_from = breakdown_of_domestic_tourism, values_from = value) %>% 
   clean_names()
 
-# Clean International Domestic Tourism Data (Overnights) ------------------------------------------------------------
+# Create International Passenger Survey Tibble  ------------------------------------------------------------
 
+## Raw data available 'regional_spread_by_year_2002_-_2021_pivot.xlsx'. Heavily formatted .xlsx.
 
+ips_2002_2019 <- tibble(year = c(2002,	2003,	2004,	2005,	2006,	2007,	2008,	2009,	2010,	2011,	
+                                 2012,	2013,	2014,	2015,	2016,	2017,	2018,	2019),
+                        visits = c(1581, 1565,	1881,	2392,	2732,	2791,	2492,	2564,	2319,	2367,	
+                                   2249,	2436,	2690,	2635,	2871,	3432,	3729,	3460),
+                        spend = c(806, 837, 994, 1208, 1439, 1367, 1241, 1397, 1422, 1478, 1398, 
+                                  1671, 1868, 1720, 1944, 2459, 2379, 2538),
+                        nights = c(15040, 14949,	19006, 24330,	26376, 24541, 19524, 21980, 21176,	17704, 
+                                   17645, 19441, 21940, 21443,	22483, 26451,	25443, 27385))
 
 # Write Clean Data To .CSV -----------------------------------------------------------
 

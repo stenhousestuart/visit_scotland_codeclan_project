@@ -8,6 +8,7 @@ output: html_notebook
 ```{r}
 library(tidyverse)
 library(here)
+library(modelr)
 ```
 
 ## Run Cleaning Script
@@ -441,13 +442,12 @@ tibble(a = c("Domestic", "International"),
 ```
 
 ```{r}
-domestic_2017_2019 <- regional_domestic_tourism %>% 
+domestic_2017_2019_spend <- regional_domestic_tourism %>% 
   filter(date_code == "2017-2019",
          region_of_residence == "All of GB") %>% 
   select(expenditure)
   
-
-international_2017_2019 <- international_visits %>%
+international_2017_2019_spend <- international_visits %>%
   select(-c(quarter, age, sample)) %>%
   filter(year %in% c(2017, 2018, 2019)) %>% 
   summarise(total_visits = sum(visits),
@@ -456,7 +456,7 @@ international_2017_2019 <- international_visits %>%
   select(total_spend)
 
 tibble(a = c("Domestic", "International"),
-       b = c(domestic_2017_2019$expenditure, international_2017_2019$total_spend)) %>% 
+       b = c(domestic_2017_2019_spend$expenditure, international_2017_2019_spend$total_spend)) %>% 
   ggplot() +
   geom_col(aes(x = a, y = b)) +
   labs(
@@ -465,6 +465,30 @@ tibble(a = c("Domestic", "International"),
     title = "Domestic vs. International Expenditure",
     subtitle = "2017-2019")
 ```
+
+```{r}
+ips_2002_2019 %>%
+  add_predictions(model) %>%
+  add_residuals(model) %>% 
+  ggplot(aes(x = visits, y = spend)) +
+  geom_point() +
+  geom_line(aes(y = pred), col = "red") +
+  annotate("text", x = 1675, y = 2500, label = "spend ~ visits") +
+  annotate("text", x = 1930, y = 2300, label = "b1 = 0.81800 / p-value = 4.78e-06") +
+  annotate("text", x = 2170, y = 2100, label = "R-Squared = 0.8876 / Residual Standard Error: 183.3") +
+  annotate("text", x = 1800, y = 1900, label = "Standard Error: 0.08115")
+```
+
+Diagnostic Plots: Ok, not great but passable.
+
+- R-squared: The proportion of variance explained by the predictor(s).
+
+- p-value: Statistical significance of effect.
+
+- Residual Standard Error: Average distance that the observed values fall from the regression line. The smaller the value, the better the regression model is able to fit the data.
+
+- Standard error: Uncertainty around estimated coefficient.
+
 ### International
 
 ```{r}
@@ -504,6 +528,10 @@ international_visits %>%
        title = "Visits by Country",
        subtitle = "Top 5 Countries per Visits")
 ```
+
+
+### USA
+
 
 
 ### Domestic
