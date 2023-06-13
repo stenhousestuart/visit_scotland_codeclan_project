@@ -9,47 +9,12 @@ library(factoextra)
 ```
 
 
-```{r}
-activities %>%
-  group_by(tourism_activity) %>%
-  mutate(exp_per_visit = Expenditure / Visits) %>% 
-  summarise(mean_exp_per_visit = mean(exp_per_visit)) %>% 
-  ggplot() +
-  geom_col(aes(x = reorder(tourism_activity, mean_exp_per_visit), y = mean_exp_per_visit,
-               fill = tourism_activity == "Shopping for items that you do not regularly buy"),
-           show.legend = FALSE) +
-  scale_fill_manual(values = c("FALSE" = "grey40",
-                               "TRUE" = "forestgreen")) +
-  labs(
-    x = "\n Activity",
-    y = "Mean Expenditure \n",
-    title = "Mean Expenditure per Activity  2013-2019") +
-  coord_flip()
-  # theme(axis.text.x = element_text(angle = 45, hjust=1))
-```
 
-```{r}
-activities %>% 
-  mutate(is_2019 = if_else(date_code == 2019, "2019", "2013-2018")) %>% 
-  group_by(tourism_activity, is_2019) %>%
-  arrange(tourism_activity) %>% 
-  mutate(exp_per_visit = Expenditure / Visits) %>% 
-  summarise(mean_exp_per_visit = mean(exp_per_visit)) %>% 
-  mutate(difference_exp_per_visit = mean_exp_per_visit - lag(mean_exp_per_visit),
-         difference_exp_per_visit_pct = (mean_exp_per_visit - lag(mean_exp_per_visit)) / lag(mean_exp_per_visit) * 100,
-         difference_exp_per_visit_label = if_else(difference_exp_per_visit > 0, "Increased", "Decreased")) %>% 
-  filter(difference_exp_per_visit != is.na(difference_exp_per_visit)) %>% 
-  ggplot(aes(x = reorder(tourism_activity, difference_exp_per_visit), y = difference_exp_per_visit)) +
-  geom_col(aes(fill = difference_exp_per_visit_label), show.legend = FALSE) +
-  # geom_text(aes(label = str_c(floor(difference_exp_per_visit_pct), "%"), vjust = -0.5)) +
-  scale_fill_manual(values = c("Increased" = "forestgreen",
-                               "Decreased" = "firebrick")) +
-  labs(
-    x = "\n Activity",
-    y = "Mean Expenditure per Visit \n",
-    title = "Mean Expenditure per Visit, 2019 vs. 2013-2018 Avg.") +
-  coord_flip()
-```
+
+
+
+
+
 
 
 

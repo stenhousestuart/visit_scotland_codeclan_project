@@ -32,6 +32,7 @@ car_demographics <- read_csv(here("data/clean_data/car_demographics_clean.csv"))
 social_demographics <- read_csv(here("data/clean_data/social_demographics_clean.csv"))
 regional_domestic_tourism <- read_csv(here("data/clean_data/regional_domestic_tourism_clean.csv"))
 activities <- read_csv(here("data/clean_data/activities_clean.csv"))
+usa_visit_spend_region <- read_csv(here("data/clean_data/usa_visit_spend_region_clean.csv"))
 
 ```
 
@@ -69,7 +70,7 @@ demographics_all %>%
              show.legend = FALSE,
              size = 4) +
   labs(x = "\n Year",
-       y = "Expenditure (Million) \n",
+       y = "Expenditure (Million Pounds, GBP) \n",
        title = "Expenditure Over Time") +
   scale_y_continuous(limits = c(0, 6500), breaks = c(0, 2000, 4000, 6000)) +
   scale_x_continuous(breaks = c(2013, 2014, 2015, 2016, 2017, 2018, 2019))
@@ -88,8 +89,8 @@ demographics_all %>%
              show.legend = FALSE,
              size = 4) +
   labs(x = "\n Year",
-       y = "Expenditure (Millions) per Visit (Millions) \n",
-       title = "Expenditure To Visit Ratio \n") +
+       y = "Expenditure (Million Pounds, GBP) per Visit (Millions) \n",
+       title = "Expenditure Per Visit \n") +
   scale_y_continuous(limits = c(0, 60), breaks = c(0, 20, 40, 60)) +
   scale_x_continuous(breaks = c(2013, 2014, 2015, 2016, 2017, 2018, 2019))
 
@@ -121,8 +122,7 @@ age_demographics %>%
   labs(
     x = "\n Age",
     y = "Mean Expenditure per Visit \n",
-    title = "Mean Expenditure per Visit 2013-2019",
-    subtitle = "By Age Group") +
+    title = "Mean Expenditure per Visit 2013-2019") +
   coord_flip()
 ```
 
@@ -418,6 +418,50 @@ social_demographics %>%
   coord_flip() +
   scale_y_continuous(labels = scales::percent_format(scale = 1))
 ```
+
+
+## Activities
+
+```{r}
+activities %>%
+  group_by(tourism_activity) %>%
+  summarise(mean_exp_per_visit = mean(exp_per_visit)) %>% 
+  ggplot() +
+  geom_col(aes(x = reorder(tourism_activity, mean_exp_per_visit), y = mean_exp_per_visit,
+               fill = tourism_activity == "Shopping for Non-Regular Purchases"),
+           show.legend = FALSE) +
+  scale_fill_manual(values = c("FALSE" = "grey40",
+                               "TRUE" = "forestgreen")) +
+  labs(
+    x = "\n Activity",
+    y = "Mean Expenditure per Visit \n",
+    title = "Mean Expenditure per Visit, 2013-2019") +
+  coord_flip()
+```
+
+```{r}
+activities %>% 
+  mutate(is_2019 = if_else(year == 2019, "2019", "2013-2018")) %>% 
+  group_by(tourism_activity, is_2019) %>%
+  arrange(tourism_activity) %>%
+  summarise(mean_exp_per_visit = mean(exp_per_visit)) %>% 
+  mutate(difference_exp_per_visit = mean_exp_per_visit - lag(mean_exp_per_visit),
+         difference_exp_per_visit_pct = (mean_exp_per_visit - lag(mean_exp_per_visit)) / lag(mean_exp_per_visit) * 100,
+         difference_exp_per_visit_label = if_else(difference_exp_per_visit > 0, "Increased", "Decreased")) %>% 
+  filter(difference_exp_per_visit != is.na(difference_exp_per_visit)) %>% 
+  ggplot(aes(x = reorder(tourism_activity, difference_exp_per_visit_pct), y = difference_exp_per_visit_pct)) +
+  geom_col(aes(fill = difference_exp_per_visit_label), show.legend = FALSE) +
+  # geom_text(aes(label = str_c(floor(difference_exp_per_visit_pct), "%"), vjust = -0.5)) +
+  scale_fill_manual(values = c("Increased" = "forestgreen",
+                               "Decreased" = "firebrick")) +
+  labs(
+    x = "\n Activity",
+    y = "% Difference \n",
+    title = "Mean Expenditure per Visit, 2019 vs. 2013-2018 Avg.") +
+  coord_flip() +
+  scale_y_continuous(labels = scales::percent_format(scale = 1))
+```
+
 
 ## Domestic & International Visitors
 

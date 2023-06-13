@@ -33,7 +33,6 @@ activities <- read_csv("data/raw_data/tourism_day_visits_activities.csv") %>%
 #   clean_names()
 # 
 
-
 # Clean Demographic Data ------------------------------------------------------------
 
 all_demographics_clean <- demographics %>%
@@ -149,7 +148,7 @@ regional_domestic_tourism_clean <- regional_domestic_tourism %>%
 
 # Create International Passenger Survey Tibble  ------------------------------------------------------------
 
-## Raw data available 'regional_spread_by_year_2002_-_2021_pivot.xlsx'. Heavily formatted .xlsx.
+## Raw data available 'regional_spread_by_year_2002_-_2021_pivot.xlsx'. Pivot Table.
 
 ips_2002_2019 <- tibble(year = c(2002,	2003,	2004,	2005,	2006,	2007,	2008,	2009,	2010,	2011,	
                                  2012,	2013,	2014,	2015,	2016,	2017,	2018,	2019),
@@ -169,13 +168,59 @@ ips_2002_2019_usa <- tibble(year = c(2002,	2003,	2004,	2005,	2006,	2007,	2008,	2
                         nights = c(2919, 3264, 3883, 2717, 4469, 3633, 2759, 2967, 2042, 2460, 
                                    2653, 2172, 3538, 4005, 4420, 5710, 4492, 4246))
 
+# Import USA Spend and Visitor Data Demographic Data ------------------------------------------------------------
+
+## Raw data available 'subregion_trend_by_purpose_country_2009-2021.xlsx'. Pivot Table.
+
+usa_visitors_2009_2019 <- read_csv("data/raw_data/usa_visitors_region.csv") %>% clean_names()
+
+usa_visitors_2009_2019_clean <- usa_visitors_2009_2019 %>% 
+  pivot_longer(
+    cols = c("x2009", "x2010", "x2011", "x2012", "x2013", "x2014", "x2015", "x2016", "x2017", "x2018", "x2019"),
+    names_to = "year",
+    values_to = "visits"
+  ) %>% 
+  mutate(year = str_remove(year, "x"))
+
+usa_spend_2009_2019 <- read_csv("data/raw_data/usa_spend_region.csv") %>% clean_names()
+
+usa_spend_2009_2019_clean <- usa_spend_2009_2019 %>% 
+  pivot_longer(
+    cols = c("x2009", "x2010", "x2011", "x2012", "x2013", "x2014", "x2015", "x2016", "x2017", "x2018", "x2019"),
+    names_to = "year",
+    values_to = "spend"
+  ) %>% 
+  mutate(year = str_remove(year, "x"))
+
+usa_visit_spend_region <- usa_visitors_2009_2019_clean %>% inner_join(usa_spend_2009_2019_clean, 
+                                                          by=c("region", "year"))
+
 # Clean Activities Data ------------------------------------------------------------
 
 activities_clean <- activities %>%
   filter(tourism_activity != "All") %>% 
   select(-c(measurement, units)) %>%
   arrange(date_code) %>% 
-  pivot_wider(names_from = breakdown_of_domestic_tourism, values_from = value)
+  pivot_wider(names_from = breakdown_of_domestic_tourism, values_from = value) %>% 
+  mutate(exp_per_visit = Expenditure / Visits,
+         tourism_activity = recode(tourism_activity,
+                                   "Day out to a beauty/health centre/spa, etc." = "Beauty/Health Centre/Spa",
+                                   "Day trips/excursions for other leisure purpose" = "Day Trips for Other Leisure Purpose",
+                                   "Entertainment - to a cinema, concert or theatre	" = "Entertainment (eg. Cinema, Concert)",
+                                   "General day out/ to explore an area" = "General Day Out / Explore an Area",
+                                   "Leisure activities e.g. hobbies & evening classes" = "Leisure Activities (eg. Hobbies)",
+                                   "Night out to a bar, pub and/or club" = "Night Out (eg. Bar, Pub)",
+                                   "Outdoor leisure activities e.g. walking, golf" = "Outdoor Leisure (eg. Golf)",
+                                   "Shopping for items that you do not regularly buy" = "Shopping for Non-Regular Purchases",
+                                   "Special personal events e.g. wedding, graduation" = "Special Personal Event (eg. Wedding)",
+                                   "Special public event e.g. festival, exhibition" = "Special Public Event (eg. Festival)",
+                                   "Sport participation, e.g. exercise classes, gym" = "Sport Participation",
+                                   "Visited friends or family for leisure	" = "Visiting Friends/Family for Leisure",
+                                   "Visitor attraction e.g. theme park, museum, zoo" = "Visitor Attraction (eg. Museum)",
+                                   "Watched live sporting events (not on TV)" = "Attending Sporting Event",
+                                   "Went out for a meal" = "Eating Out")) %>% 
+  rename(year = date_code) %>% 
+  clean_names()
 
 
 # Write Clean Data To .CSV -----------------------------------------------------------
@@ -191,6 +236,7 @@ write_csv(social_demographics_clean, here("data/clean_data/social_demographics_c
 # write_csv(domestic_day_visits_clean, here("data/clean_data/domestic_day_visits_clean.csv"))
 write_csv(regional_domestic_tourism_clean, here("data/clean_data/regional_domestic_tourism_clean.csv"))
 write_csv(activities_clean, here("data/clean_data/activities_clean.csv"))
+write_csv(usa_visit_spend_region, here("data/clean_data/usa_visit_spend_region_clean.csv"))
 
 # Remove Objects from Environment -----------------------------------------------------------
 
@@ -209,3 +255,8 @@ rm(regional_domestic_tourism)
 rm(regional_domestic_tourism_clean)
 rm(activities)
 rm(activities_clean)
+rm(usa_visitors_2009_2019)
+rm(usa_spend_2009_2019)
+rm(usa_visitors_2009_2019_clean)
+rm(usa_spend_2009_2019_clean)
+rm(usa_visit_spend_region)
