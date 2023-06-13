@@ -193,7 +193,8 @@ usa_spend_2009_2019_clean <- usa_spend_2009_2019 %>%
   mutate(year = str_remove(year, "x"))
 
 usa_visit_spend_region <- usa_visitors_2009_2019_clean %>% inner_join(usa_spend_2009_2019_clean, 
-                                                          by=c("region", "year"))
+                                                          by=c("region", "year")) %>% 
+  select(-lat.y, -long.y)
 
 # Clean Activities Data ------------------------------------------------------------
 

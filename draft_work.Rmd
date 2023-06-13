@@ -6,12 +6,100 @@ output: html_notebook
 ```{r}
 library(broom)
 library(factoextra)
+library(sf)
+```
+
+```{r}
+usa_visit_spend_region %>%
+  group_by(region) %>% 
+  summarise(mean_spend = mean(spend),
+            mean_visits = mean(visits)) %>% 
+  ggplot(aes(x = mean_visits, y = mean_spend, colour = region)) +
+  geom_point()
+```
+
+
+```{r}
+usa_visit_spend_region %>% 
+  ggplot(aes(x = year, y = visits, colour = region, group = region)) +
+  geom_line() +
+  geom_point() +
+  scale_x_continuous(breaks = c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019))
+```
+
+```{r}
+usa_visit_spend_region %>% 
+  ggplot(aes(x = year, y = spend, colour = region, group = region)) +
+  geom_line() +
+  geom_point() +
+  scale_x_continuous(breaks = c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019))
+```
+
+```{r}
+library(leaflet)
+library(leafpop)
+```
+
+
+```{r}
+
+pal <- colorNumeric(
+  palette = "Reds",
+  domain = usa_visit_spend_region$visits)
+
+usa_visit_spend_region %>%
+  filter(year == 2019) %>% 
+  leaflet() %>%
+  addTiles() %>% 
+  addCircleMarkers(lng = ~long.x,
+                   lat = ~lat.x,
+                   color = ~pal(visits)) %>% 
+                   # popup = ~paste(location, "<br> Spend:", spend, "<br> Visits:", visits)) %>% 
+  addLegend(position = "bottomright", pal = geo_palette, values = ~visits, opacity = 2, title = "Visits") %>% 
+  addControl(position = "topright", html = title)
 ```
 
 
 
 
+----------------------------------------------------------------
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+----------------------------------------------------------------
+
+
+```{r}
+scotland_regions <- st_read(dsn = "geo/", # Data Source Name/Path
+                          layer = "SG_ScottishPoliceDivisions_2019")
+```
+
+```{r}
+glimpse(scotland_regions)
+```
+
+```{r}
+scotland_regions$PDivName
+```
+
+```{r}
+ggplot(scotland_regions) +
+  geom_sf(fill = "antiquewhite")
+```
 
 
 
