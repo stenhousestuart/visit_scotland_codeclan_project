@@ -4,77 +4,146 @@ output: html_notebook
 ---
 
 ```{r}
-international_visits %>%
-  group_by(year, quarter, country) %>%
-  summarise(total_visits = sum(visits),
-            total_spend = sum(spend)) %>% 
-  ggplot(aes(x = total_visits, y = total_spend)) +
-  geom_point() +
-  geom_smooth(method = "lm")
+library(broom)
+library(factoextra)
 ```
 
 
 ```{r}
-demographics_all %>% 
-  ggplot(aes(x = visits, y = expenditure)) +
-  geom_point() +
-  geom_smooth(method = "lm")
-```
-
-```{r}
-
-ips_2002_2019 %>% 
-  ggplot(aes(x = visits, y = spend)) + 
-  geom_point() +
-  geom_smooth(method = "lm", se = FALSE) +
+activities %>%
+  group_by(tourism_activity) %>%
+  mutate(exp_per_visit = Expenditure / Visits) %>% 
+  summarise(mean_exp_per_visit = mean(exp_per_visit)) %>% 
+  ggplot() +
+  geom_col(aes(x = reorder(tourism_activity, mean_exp_per_visit), y = mean_exp_per_visit,
+               fill = tourism_activity == "Shopping for items that you do not regularly buy"),
+           show.legend = FALSE) +
+  scale_fill_manual(values = c("FALSE" = "grey40",
+                               "TRUE" = "forestgreen")) +
   labs(
-    x = "Visits (Million)",
-    y = "Expenditure (£Million) \n",
-    title = "Scotland: International Visits vs. Spend",
-    subtitle = "2012-2019")
-  
+    x = "\n Activity",
+    y = "Mean Expenditure \n",
+    title = "Mean Expenditure per Activity  2013-2019") +
+  coord_flip()
+  # theme(axis.text.x = element_text(angle = 45, hjust=1))
 ```
 
 ```{r}
+activities %>% 
+  mutate(is_2019 = if_else(date_code == 2019, "2019", "2013-2018")) %>% 
+  group_by(tourism_activity, is_2019) %>%
+  arrange(tourism_activity) %>% 
+  mutate(exp_per_visit = Expenditure / Visits) %>% 
+  summarise(mean_exp_per_visit = mean(exp_per_visit)) %>% 
+  mutate(difference_exp_per_visit = mean_exp_per_visit - lag(mean_exp_per_visit),
+         difference_exp_per_visit_pct = (mean_exp_per_visit - lag(mean_exp_per_visit)) / lag(mean_exp_per_visit) * 100,
+         difference_exp_per_visit_label = if_else(difference_exp_per_visit > 0, "Increased", "Decreased")) %>% 
+  filter(difference_exp_per_visit != is.na(difference_exp_per_visit)) %>% 
+  ggplot(aes(x = reorder(tourism_activity, difference_exp_per_visit), y = difference_exp_per_visit)) +
+  geom_col(aes(fill = difference_exp_per_visit_label), show.legend = FALSE) +
+  # geom_text(aes(label = str_c(floor(difference_exp_per_visit_pct), "%"), vjust = -0.5)) +
+  scale_fill_manual(values = c("Increased" = "forestgreen",
+                               "Decreased" = "firebrick")) +
+  labs(
+    x = "\n Activity",
+    y = "Mean Expenditure per Visit \n",
+    title = "Mean Expenditure per Visit, 2019 vs. 2013-2018 Avg.") +
+  coord_flip()
+```
 
-model <- lm(formula = spend ~ visits, data = ips_2002_2019)
 
-model2 <- lm(formula = spend ~ visits + nights, data = ips_2002_2019)
 
+
+
+
+
+
+
+-----------
+
+
+
+
+
+
+
+```{r}
+activities_summary <- activities %>%
+  group_by(tourism_activity) %>% 
+  summarise(mean_expenditure = mean(Expenditure),
+            mean_visits = mean(Visits),
+            exp_per_visit = mean_expenditure / mean_visits) %>% 
+  arrange(desc(exp_per_visit))
 ```
 
 ```{r}
-summary(model)
-```
-
-```{r}
-summary(model2)
-```
-
-```{r}
-library(modelr)
+activities_clust <- activities %>%
+  group_by(tourism_activity) %>% 
+  summarise(total_expenditure = sum(Expenditure),
+            total_visits = sum(Visits)) %>% 
+  select(total_expenditure, total_visits)
 ```
 
 
-```{r}
 
-ips_2002_2019 %>%
-  add_predictions(model) %>%
-  add_residuals(model) %>% 
-  ggplot(aes(x = visits, y = spend)) +
+```{r}
+min_k <- 1
+max_k <- 5
+
+k_clusters <- tibble(k = min_k:max_k) %>% 
+  mutate(kclust = map(k, ~ kmeans(activities_clust, # Create K-means cluster beteen 1-25 clusters.
+                                  centers = .x,
+                                  nstart = 25)),
+         tidied = map(kclust, tidy), # Tidies `kclust`
+         glanced = map(kclust, glance), # Uses tidied to create a glance
+         augmented = map(kclust, augment, activities_summary)) # Adds labels
+
+# Unnest `glanced` to view `tot.withinss`
+clusterings <- k_clusters %>% 
+  unnest(glanced)
+
+clusterings
+```
+
+```{r}
+clusterings %>% 
+  ggplot(aes(x = k, y = tot.withinss)) +
   geom_point() +
-  geom_line(aes(y = pred), col = "red") +
-  annotate("text", x = 1675, y = 2500, label = "spend ~ visits") +
-  annotate("text", x = 1930, y = 2300, label = "b1 = 0.81800 / p-value = 4.78e-06") +
-  annotate("text", x = 2170, y = 2100, label = "R-Squared = 0.8876 / Residual Standard Error: 183.3")
-
+  geom_line() +
+  scale_x_continuous(breaks = seq(1, 25, 1))
 ```
 
 ```{r}
-library(ggfortify)
+fviz_nbclust(activities_clust,
+             kmeans,
+             method = "wss", #within sum of squares
+             nstart = 25)
 ```
 
 ```{r}
-autoplot(model)
+fviz_nbclust(activities_clust,
+             kmeans,
+             method = "silhouette",
+             nstart = 25)
 ```
+
+
+```{r}
+clusterings %>% 
+  unnest(augmented) %>% # Unnest augmented created in step 5.1
+  filter(k == 2) %>% # Set number of clusters
+  ggplot(aes(x = total_visits, y = total_expenditure, colour = .cluster)) +
+  geom_point()
+```
+
+```{r}
+clusterings %>% 
+  unnest(augmented) %>% # Unnest augmented created in step 5.1
+  filter(k == 2) %>% 
+  group_by(.cluster)
+```
+
+
+-----------------------------------------------------------
+
 

@@ -9,6 +9,7 @@ output: html_notebook
 library(tidyverse)
 library(here)
 library(modelr)
+library(ggfortify)
 ```
 
 ## Run Cleaning Script
@@ -30,6 +31,7 @@ children_demographics <- read_csv(here("data/clean_data/children_demographics_cl
 car_demographics <- read_csv(here("data/clean_data/car_demographics_clean.csv"))
 social_demographics <- read_csv(here("data/clean_data/social_demographics_clean.csv"))
 regional_domestic_tourism <- read_csv(here("data/clean_data/regional_domestic_tourism_clean.csv"))
+activities <- read_csv(here("data/clean_data/activities_clean.csv"))
 
 ```
 
@@ -112,7 +114,7 @@ age_demographics %>%
   group_by(age) %>% 
   summarise(mean_exp_per_visit = mean(exp_per_visit)) %>% 
   ggplot() +
-  geom_col(aes(x = age, y = mean_exp_per_visit, fill = age == "45-54 years"),
+  geom_col(aes(x = reorder(age, mean_exp_per_visit), y = mean_exp_per_visit, fill = age == "45-54 years"),
            show.legend = FALSE) +
   scale_fill_manual(values = c("FALSE" = "grey40",
                                "TRUE" = "forestgreen")) +
@@ -120,7 +122,8 @@ age_demographics %>%
     x = "\n Age",
     y = "Mean Expenditure per Visit \n",
     title = "Mean Expenditure per Visit 2013-2019",
-    subtitle = "By Age Group")
+    subtitle = "By Age Group") +
+  coord_flip()
 ```
 
 ```{r}
@@ -134,16 +137,17 @@ age_demographics %>%
          difference_exp_per_visit_pct = (mean_exp_per_visit - lag(mean_exp_per_visit)) / lag(mean_exp_per_visit) * 100,
          difference_exp_per_visit_label = if_else(difference_exp_per_visit > 0, "Increased", "Decreased")) %>% 
   filter(difference_exp_per_visit != is.na(difference_exp_per_visit)) %>% 
-  ggplot(aes(x = age, y = difference_exp_per_visit)) +
+  ggplot(aes(x = reorder(age, difference_exp_per_visit), y = difference_exp_per_visit_pct)) +
   geom_col(aes(fill = difference_exp_per_visit_label), show.legend = FALSE) +
-  geom_text(aes(label = str_c(floor(difference_exp_per_visit_pct), "%"), vjust = -0.5)) +
+  # geom_text(aes(label = str_c(floor(difference_exp_per_visit_pct), "%"), vjust = -0.5)) +
   scale_fill_manual(values = c("Increased" = "forestgreen",
                                "Decreased" = "firebrick")) +
   labs(
     x = "\n Age",
-    y = "Mean Expenditure per Visit \n",
-    title = "Mean Expenditure per Visit, 2019 vs. 2013-2018",
-    subtitle = "By Age Group")
+    y = "% Difference \n",
+    title = "Expenditure Per Visit % Difference, 2019 vs. 2013-2018 Avg.") +
+  coord_flip() +
+  scale_y_continuous(labels = scales::percent_format(scale = 1))
 
 ```
 
@@ -166,8 +170,7 @@ gender_demographics %>%
   labs(
     x = "\n Gender",
     y = "Mean Expenditure per Visit \n",
-    title = "Mean Expenditure per Visit 2013-2019",
-    subtitle = "By Gender")
+    title = "Mean Expenditure per Visit 2013-2019")
 ```
 
 
@@ -180,16 +183,16 @@ gender_demographics %>%
          difference_exp_per_visit_pct = (mean_exp_per_visit - lag(mean_exp_per_visit)) / lag(mean_exp_per_visit) * 100,
          difference_exp_per_visit_label = if_else(difference_exp_per_visit > 0, "Increased", "Decreased")) %>% 
   filter(difference_exp_per_visit != is.na(difference_exp_per_visit)) %>% 
-  ggplot(aes(x = gender, y = difference_exp_per_visit)) +
+  ggplot(aes(x = gender, y = difference_exp_per_visit_pct)) +
   geom_col(aes(fill = difference_exp_per_visit_label), show.legend = FALSE) +
-  geom_text(aes(label = str_c(floor(difference_exp_per_visit_pct), "%"), vjust = -0.5)) +
+  # geom_text(aes(label = str_c(floor(difference_exp_per_visit_pct), "%"), vjust = -0.5)) +
   scale_fill_manual(values = c("Increased" = "forestgreen",
                                "Decreased" = "firebrick")) +
   labs(
     x = "\n Gender",
-    y = "Mean Expenditure per Visit \n",
-    title = "Mean Expenditure per Visit, 2019 vs. 2013-2018",
-    subtitle = "By Gender")
+    y = "% Difference \n",
+    title = "Expenditure Per Visit % Difference, 2019 vs. 2013-2018 Avg.") +
+  scale_y_continuous(labels = scales::percent_format(scale = 1))
 ```
 
 
@@ -226,16 +229,16 @@ marital_demographics %>%
          difference_exp_per_visit_pct = (mean_exp_per_visit - lag(mean_exp_per_visit)) / lag(mean_exp_per_visit) * 100,
          difference_exp_per_visit_label = if_else(difference_exp_per_visit > 0, "Increased", "Decreased")) %>% 
   filter(difference_exp_per_visit != is.na(difference_exp_per_visit)) %>% 
-  ggplot(aes(x = marital_status, y = difference_exp_per_visit)) +
+  ggplot(aes(x = marital_status, y = difference_exp_per_visit_pct)) +
   geom_col(aes(fill = difference_exp_per_visit_label), show.legend = FALSE) +
-  geom_text(aes(label = str_c(floor(difference_exp_per_visit_pct), "%"), vjust = -0.5)) +
+  # geom_text(aes(label = str_c(floor(difference_exp_per_visit_pct), "%"), vjust = -0.5)) +
   scale_fill_manual(values = c("Increased" = "forestgreen",
                                "Decreased" = "firebrick")) +
   labs(
     x = "\n Marital Status",
-    y = "Mean Expenditure per Visit \n",
-    title = "Mean Expenditure per Visit, 2019 vs. 2013-2018",
-    subtitle = "By Marital Status")
+    y = "% Difference \n",
+    title = "Expenditure Per Visit % Difference, 2019 vs. 2013-2018 Avg.") +
+  scale_y_continuous(labels = scales::percent_format(scale = 1))
 ```
 
 ### Children
@@ -270,16 +273,16 @@ children_demographics %>%
          difference_exp_per_visit_pct = (mean_exp_per_visit - lag(mean_exp_per_visit)) / lag(mean_exp_per_visit) * 100,
          difference_exp_per_visit_label = if_else(difference_exp_per_visit > 0, "Increased", "Decreased")) %>% 
   filter(difference_exp_per_visit != is.na(difference_exp_per_visit)) %>% 
-  ggplot(aes(x = children, y = difference_exp_per_visit)) +
+  ggplot(aes(x = children, y = difference_exp_per_visit_pct)) +
   geom_col(aes(fill = difference_exp_per_visit_label), show.legend = FALSE) +
-  geom_text(aes(label = str_c(floor(difference_exp_per_visit_pct), "%"), vjust = -0.5)) +
+  # geom_text(aes(label = str_c(floor(difference_exp_per_visit_pct), "%"), vjust = -0.5)) +
   scale_fill_manual(values = c("Increased" = "forestgreen",
                                "Decreased" = "firebrick")) +
   labs(
     x = "\n Children",
-    y = "Mean Expenditure per Visit \n",
-    title = "Mean Expenditure per Visit, 2019 vs. 2013-2018",
-    subtitle = "By Children")
+    y = "% Difference \n",
+    title = "Expenditure Per Visit % Difference, 2019 vs. 2013-2018 Avg.") +
+  scale_y_continuous(labels = scales::percent_format(scale = 1))
 ```
 
 ### Employment
@@ -314,16 +317,18 @@ employment_demographics %>%
          difference_exp_per_visit_pct = (mean_exp_per_visit - lag(mean_exp_per_visit)) / lag(mean_exp_per_visit) * 100,
          difference_exp_per_visit_label = if_else(difference_exp_per_visit > 0, "Increased", "Decreased")) %>% 
   filter(difference_exp_per_visit != is.na(difference_exp_per_visit)) %>% 
-  ggplot(aes(x = employment_status, y = difference_exp_per_visit)) +
+  ggplot(aes(x = reorder(employment_status, difference_exp_per_visit_pct), y = difference_exp_per_visit_pct)) +
   geom_col(aes(fill = difference_exp_per_visit_label), show.legend = FALSE) +
-  geom_text(aes(label = str_c(floor(difference_exp_per_visit_pct), "%"), vjust = -0.5)) +
+  # geom_text(aes(label = str_c(floor(difference_exp_per_visit_pct), "%"), vjust = -0.5)) +
   scale_fill_manual(values = c("Increased" = "forestgreen",
                                "Decreased" = "firebrick")) +
   labs(
     x = "\n Employment Status",
-    y = "Mean Expenditure per Visit \n",
-    title = "Mean Expenditure per Visit, 2019 vs. 2013-2018",
-    subtitle = "By Employment Status")
+    y = "% Difference \n",
+    title = "Expenditure Per Visit % Difference, 2019 vs. 2013-2018 Avg.") +
+  coord_flip() +
+  scale_y_continuous(labels = scales::percent_format(scale = 1))
+  
 ```
 
 ### Car Access
@@ -357,16 +362,16 @@ car_demographics %>%
          difference_exp_per_visit_pct = (mean_exp_per_visit - lag(mean_exp_per_visit)) / lag(mean_exp_per_visit) * 100,
          difference_exp_per_visit_label = if_else(difference_exp_per_visit > 0, "Increased", "Decreased")) %>% 
   filter(difference_exp_per_visit != is.na(difference_exp_per_visit)) %>% 
-  ggplot(aes(x = access_to_car, y = difference_exp_per_visit)) +
+  ggplot(aes(x = access_to_car, y = difference_exp_per_visit_pct)) +
   geom_col(aes(fill = difference_exp_per_visit_label), show.legend = FALSE) +
-  geom_text(aes(label = str_c(floor(difference_exp_per_visit_pct), "%"), vjust = -0.5)) +
+  # geom_text(aes(label = str_c(floor(difference_exp_per_visit_pct), "%"), vjust = -0.5)) +
   scale_fill_manual(values = c("Increased" = "forestgreen",
                                "Decreased" = "firebrick")) +
   labs(
     x = "\n Access To Car",
-    y = "Mean Expenditure per Visit \n",
-    title = "Mean Expenditure per Visit, 2019 vs. 2013-2018",
-    subtitle = "By Access To Car")
+    y = "% Difference \n",
+    title = "Expenditure Per Visit % Difference, 2019 vs. 2013-2018 Avg.") +
+  scale_y_continuous(labels = scales::percent_format(scale = 1))
 ```
 
 ### Social Grade
@@ -381,15 +386,15 @@ social_demographics %>%
   group_by(social_grade) %>% 
   summarise(mean_exp_per_visit = mean(exp_per_visit)) %>% 
   ggplot() +
-  geom_col(aes(x = social_grade, y = mean_exp_per_visit, fill = social_grade == "AB"),
+  geom_col(aes(x = reorder(social_grade, mean_exp_per_visit), y = mean_exp_per_visit, fill = social_grade == "AB"),
            show.legend = FALSE) +
   scale_fill_manual(values = c("FALSE" = "grey40",
                                "TRUE" = "forestgreen")) +
   labs(
     x = "\n Social Gradee",
     y = "Mean Expenditure per Visit \n",
-    title = "Mean Expenditure per Visit 2013-2019",
-    subtitle = "By Social Grade")
+    title = "Mean Expenditure per Visit 2013-2019") +
+  coord_flip()
 ```
 
 ```{r}
@@ -401,16 +406,17 @@ social_demographics %>%
          difference_exp_per_visit_pct = (mean_exp_per_visit - lag(mean_exp_per_visit)) / lag(mean_exp_per_visit) * 100,
          difference_exp_per_visit_label = if_else(difference_exp_per_visit > 0, "Increased", "Decreased")) %>% 
   filter(difference_exp_per_visit != is.na(difference_exp_per_visit)) %>% 
-  ggplot(aes(x = social_grade, y = difference_exp_per_visit)) +
+  ggplot(aes(x = reorder(social_grade, difference_exp_per_visit_pct), y = difference_exp_per_visit_pct)) +
   geom_col(aes(fill = difference_exp_per_visit_label), show.legend = FALSE) +
-  geom_text(aes(label = str_c(floor(difference_exp_per_visit_pct), "%"), vjust = -0.5)) +
+  # geom_text(aes(label = str_c(floor(difference_exp_per_visit_pct), "%"), vjust = -0.5)) +
   scale_fill_manual(values = c("Increased" = "forestgreen",
                                "Decreased" = "firebrick")) +
   labs(
     x = "\n Social Grade",
-    y = "Mean Expenditure per Visit \n",
-    title = "Mean Expenditure per Visit, 2019 vs. 2013-2018",
-    subtitle = "By Social Grade")
+    y = "% Difference \n",
+    title = "Expenditure Per Visit % Difference, 2019 vs. 2013-2018 Avg.") +
+  coord_flip() +
+  scale_y_continuous(labels = scales::percent_format(scale = 1))
 ```
 
 ## Domestic & International Visitors
@@ -466,30 +472,42 @@ tibble(a = c("Domestic", "International"),
     subtitle = "2017-2019")
 ```
 
+### International
+
+#### Summary
+
 ```{r}
 ips_2002_2019 %>%
-  add_predictions(model) %>%
-  add_residuals(model) %>% 
+  summarise(cor(spend, visits))
+```
+
+```{r}
+model_ips <- lm(formula = spend ~ visits, data = ips_2002_2019)
+summary(model_ips)
+```
+
+```{r}
+autoplot(model_ips)
+```
+
+```{r}
+ips_2002_2019 %>%
+  add_predictions(model_ips) %>%
+  add_residuals(model_ips) %>% 
   ggplot(aes(x = visits, y = spend)) +
   geom_point() +
   geom_line(aes(y = pred), col = "red") +
   annotate("text", x = 1675, y = 2500, label = "spend ~ visits") +
-  annotate("text", x = 1930, y = 2300, label = "b1 = 0.81800 / p-value = 4.78e-06") +
-  annotate("text", x = 2170, y = 2100, label = "R-Squared = 0.8876 / Residual Standard Error: 183.3") +
-  annotate("text", x = 1800, y = 1900, label = "Standard Error: 0.08115")
+  annotate("text", x = 1930, y = 2300, label = "b1 = 0.81800 / p-value = 2.46e-08") +
+  annotate("text", x = 2170, y = 2100, label = "R-Squared = 0.864 / Residual Standard Error: 195.2") +
+  labs(
+    x = "Visits (Million)",
+    y = "Expenditure (£Million) \n",
+    title = "Scotland: International Visits vs. Spend",
+    subtitle = "2002-2019")
 ```
 
-Diagnostic Plots: Ok, not great but passable.
-
-- R-squared: The proportion of variance explained by the predictor(s).
-
-- p-value: Statistical significance of effect.
-
-- Residual Standard Error: Average distance that the observed values fall from the regression line. The smaller the value, the better the regression model is able to fit the data.
-
-- Standard error: Uncertainty around estimated coefficient.
-
-### International
+#### By Country
 
 ```{r}
 international_visits %>% 
@@ -530,8 +548,74 @@ international_visits %>%
 ```
 
 
-### USA
+#### USA
 
+```{r}
+ips_2002_2019_usa %>%
+  summarise(cor(spend, visits))
+```
+
+```{r}
+model_ips_usa <- lm(formula = spend ~ visits, data = ips_2002_2019_usa)
+summary(model_ips_usa)
+```
+
+Model: spend ~ visits
+
+Interpretation: ~83% of the variation in expenditure can be explained by the number of visits. 
+
+Question: USA visits increased by 11.5789% between 2018 and 2019 to 636 Million. If this percentage increase in visits was replicated in 2020 (709.642m), what would our model predict for expenditure?
+
+Answer: If USA visits were increased as above, the model would predict expenditure of ~£723m (Low Estimate ~£655m, High Estimate ~£791m)
+
+As calculated below.
+
+Step 1.
+outcome = b0 + b1 * 1st Predictor
+
+Step 2.
+expenditure = b0(intercept) + b1(coefficient) * 1st Predictor
+
+Step 3.
+expenditure = b0(intercept) + b1(coefficient) * `visits`
+
+Step 4.
+expenditure = -195.9631 + 1.2953 * `709.642`
+
+Step 5.
+expenditure = 723.2287 (Low Estimate 655.3287, High Estimate 791.1287)
+
+
+```{r}
+
+predict_at <- data.frame(visits = c(709.642))
+
+# get predicted heights at those sample_weights
+predict(model_ips_usa, newdata = predict_at)
+```
+
+```{r}
+723.2287  + c(-67.9, 67.9)
+```
+
+
+```{r}
+ips_2002_2019_usa %>%
+  add_predictions(model_ips_usa) %>%
+  add_residuals(model_ips_usa) %>% 
+  ggplot(aes(x = visits, y = spend)) +
+  geom_point() +
+  geom_line(aes(y = pred), col = "red") +
+  labs(
+    x = "Visits (Million)",
+    y = "Expenditure (£Million) \n",
+    title = "Scotland: USA Visits vs. Spend",
+    subtitle = "2002-2019")
+```
+
+```{r}
+autoplot(model_ips_usa)
+```
 
 
 ### Domestic

@@ -17,11 +17,10 @@ regional_domestic_tourism <- read_csv("data/raw_data/regional_domestic_tourism.c
 international_visits <- read_csv("data/raw_data/international-passenger-survey-scotland-2019.csv") %>%
   clean_names()
 
-# domestic_day_visits <- read_excel("data/raw_data/gbdvs-2019-scotland-and-gb.xlsx") %>% 
-#   clean_names()
-#
+activities <- read_csv("data/raw_data/tourism_day_visits_activities.csv") %>%
+  clean_names()
 
-# activities <- read_csv("data/raw_data/tourism_day_visits_activities.csv") %>% 
+# domestic_day_visits <- read_excel("data/raw_data/gbdvs-2019-scotland-and-gb.xlsx") %>% 
 #   clean_names()
 
 # location <- read_csv("data/raw_data/tourism_day_visits_location.csv") %>% 
@@ -139,16 +138,6 @@ social_demographics_clean <- demographics %>%
   rename(year = date_code) %>% 
   clean_names()
 
-
-# Clean Domestic Day Visit Data ------------------------------------------------------------
-
-# domestic_day_visits_clean <- domestic_day_visits %>% 
-#   filter(regions == "Scotland") %>% 
-#   mutate(toursism_exp_per_visit = tourism_day_visit_spend_m / tourism_day_visits_m,
-#          toursism_exp_per_visit_pct_change = (toursism_exp_per_visit - lag(toursism_exp_per_visit)) / lag(toursism_exp_per_visit) * 100,
-#          leisure_exp_per_visit = leisure_day_visits_spend_m / leisure_day_visits_m,
-#          leisure_exp_per_visit_pct_change = (leisure_exp_per_visit - lag(leisure_exp_per_visit)) / lag(leisure_exp_per_visit) * 100)
-
 # Clean Regional Domestic Tourism Data (Overnights) ------------------------------------------------------------
 
 regional_domestic_tourism_clean <- regional_domestic_tourism %>%
@@ -171,6 +160,24 @@ ips_2002_2019 <- tibble(year = c(2002,	2003,	2004,	2005,	2006,	2007,	2008,	2009,
                         nights = c(15040, 14949,	19006, 24330,	26376, 24541, 19524, 21980, 21176,	17704, 
                                    17645, 19441, 21940, 21443,	22483, 26451,	25443, 27385))
 
+ips_2002_2019_usa <- tibble(year = c(2002,	2003,	2004,	2005,	2006,	2007,	2008,	2009,	2010,	2011,	
+                                 2012,	2013,	2014,	2015,	2016,	2017,	2018,	2019),
+                        visits = c(386, 414, 405, 344, 475, 417, 340, 317, 263, 323, 302, 301, 
+                                   399, 425, 487, 661, 570, 636),
+                        spend = c(236, 228, 277, 195, 361, 257, 260, 208, 175, 219, 251, 262, 
+                                  414, 397, 538, 645, 502, 717),
+                        nights = c(2919, 3264, 3883, 2717, 4469, 3633, 2759, 2967, 2042, 2460, 
+                                   2653, 2172, 3538, 4005, 4420, 5710, 4492, 4246))
+
+# Clean Activities Data ------------------------------------------------------------
+
+activities_clean <- activities %>%
+  filter(tourism_activity != "All") %>% 
+  select(-c(measurement, units)) %>%
+  arrange(date_code) %>% 
+  pivot_wider(names_from = breakdown_of_domestic_tourism, values_from = value)
+
+
 # Write Clean Data To .CSV -----------------------------------------------------------
 
 write_csv(all_demographics_clean, here("data/clean_data/all_demographics_clean.csv"))
@@ -183,6 +190,7 @@ write_csv(car_demographics_clean, here("data/clean_data/car_demographics_clean.c
 write_csv(social_demographics_clean, here("data/clean_data/social_demographics_clean.csv"))
 # write_csv(domestic_day_visits_clean, here("data/clean_data/domestic_day_visits_clean.csv"))
 write_csv(regional_domestic_tourism_clean, here("data/clean_data/regional_domestic_tourism_clean.csv"))
+write_csv(activities_clean, here("data/clean_data/activities_clean.csv"))
 
 # Remove Objects from Environment -----------------------------------------------------------
 
@@ -199,3 +207,5 @@ rm(social_demographics_clean)
 # rm(domestic_day_visits_clean)
 rm(regional_domestic_tourism)
 rm(regional_domestic_tourism_clean)
+rm(activities)
+rm(activities_clean)
