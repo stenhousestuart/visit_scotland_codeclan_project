@@ -58,3 +58,7 @@ rsconnect/
 .Rhistory
 .RData
 .Ruserdata
+
+## Geo Shapefiles
+
+.shp
