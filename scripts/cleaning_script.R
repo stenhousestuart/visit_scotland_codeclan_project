@@ -13,10 +13,10 @@ regional_domestic_tourism <- read_csv("data/raw_data/regional_domestic_tourism.c
 
 local_authority_codes <- read_csv("data/raw_data/local_authority_codes.csv")
 
-# demographics <- read_csv("data/raw_data/tourism_day_visits_demographics.csv") %>% 
-#   clean_names()
+international_visits <- read_csv("data/raw_data/international-passenger-survey-scotland-2019.csv") %>%
+  clean_names()
 
-# international_visits <- read_csv("data/raw_data/international-passenger-survey-scotland-2019.csv") %>%
+# demographics <- read_csv("data/raw_data/tourism_day_visits_demographics.csv") %>% 
 #   clean_names()
 
 # activities <- read_csv("data/raw_data/tourism_day_visits_activities.csv") %>%

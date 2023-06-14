@@ -95,9 +95,18 @@ regional_domestic_tourism_all %>%
        subtitle = "3 Year Average")
 ```
 
-### Which Regions Are Domestic Tourists Visiting
+## Domestic Tourism
 
 #### Average Visits By Region
+
+##### Over Time
+
+```{r}
+regional_domestic_tourism_individual %>%
+  filter(visits > 1000) %>% 
+  ggplot() +
+  geom_line(aes(x = year, y = visits, colour = local_authority, group = local_authority))
+```
 
 ##### Stats
 
@@ -106,14 +115,11 @@ regional_domestic_tourism_all %>%
 regional_domestic_tourism_all %>% 
   summarise(mean_annual_visits = mean(visits))
 
-# Mean Annual Visits: ~12,337,000
-
 regional_domestic_tourism_all %>%
   rep_sample_n(size = 12, replace = TRUE, reps = 5000) %>%
   summarise(mean_visits = mean(visits)) %>% 
   get_confidence_interval(level = 0.95, type = "percentile")
 
-# 95% CI: 12,175,250 - 12,507,590
 ```
 
 ##### Map
@@ -121,7 +127,7 @@ regional_domestic_tourism_all %>%
 ```{r}
 
 regional_data_joined %>% 
-  group_by(year, code) %>% 
+  group_by(code) %>% 
   summarise(mean_visits = mean(visits)) %>% 
   ggplot(aes(fill = mean_visits)) + 
   geom_sf() +
@@ -136,8 +142,16 @@ regional_data_joined %>%
 
 ```
 
-
 #### Expenditure by Region
+
+##### Over Time
+
+```{r}
+regional_domestic_tourism_individual %>%
+  filter(expenditure > 300) %>% 
+  ggplot() +
+  geom_line(aes(x = year, y = expenditure, colour = local_authority, group = local_authority))
+```
 
 ##### Stats
 
@@ -145,21 +159,18 @@ regional_data_joined %>%
 regional_domestic_tourism_all %>% 
   summarise(mean_annual_exp = mean(expenditure))
 
-# Mean Annual Expenditure: 
-
 regional_domestic_tourism_all %>%
   rep_sample_n(size = 12, replace = TRUE, reps = 5000) %>%
   summarise(mean_annual_exp = mean(expenditure)) %>% 
   get_confidence_interval(level = 0.95, type = "percentile")
 
-# 95% CI: 1
 ```
 
 ##### Map
 
 ```{r}
 regional_data_joined %>% 
-  group_by(year, code) %>% 
+  group_by(code) %>% 
   summarise(mean_exp = mean(expenditure)) %>% 
   ggplot(aes(fill = mean_exp)) + 
   geom_sf() +
@@ -173,19 +184,90 @@ regional_data_joined %>%
   theme(panel.background = element_rect(fill = "white"))
 ```
 
+#### Spend Per Visit
 
+```{r}
+regional_domestic_tourism_individual %>%
+  filter(visits != 0,
+         expenditure != 0) %>% 
+  mutate(exp_per_visit = expenditure / visits, rm.na = TRUE) %>%
+  group_by(local_authority) %>% 
+  summarise(mean_exp_per_visit = mean(exp_per_visit)) %>% 
+  arrange(desc(mean_exp_per_visit)) %>%
+  ggplot() +
+  geom_col(aes(x = reorder(local_authority, mean_exp_per_visit), y = mean_exp_per_visit,
+               fill = local_authority %in% c("City of Edinburgh", "Glasgow City", "Highland")),
+           show.legend = FALSE, colour = "white") +
+  scale_fill_manual(values = c("FALSE" = "grey60",
+                               "TRUE" = "#540453")) +
+  coord_flip() +
+  labs(
+    x = "Region",
+    y = "Mean Expenditure per Visit (Million GBP / Thousand Visits)",
+    title = "Domestic Tourism Mean Expenditure per Visit",
+    subtitle = "By Region")
+```
 
+## International Tourism
 
+### Visit Stats
 
-### Line Plot Over Time
+```{r}
+international_visits %>%
+  filter(year %in% c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019)) %>% 
+  group_by(year) %>% 
+  summarise(sum_annual_visits = sum(visits)) %>% 
+  summarise(avg_annual_visits = mean(sum_annual_visits))
 
+international_visits_summary <- international_visits %>%
+  filter(year %in% c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019)) %>%
+  group_by(year) %>% 
+  summarise(sum_annual_visits = sum(visits))
 
+international_visits_summary %>%
+  rep_sample_n(size = 11, replace = TRUE, reps = 5000) %>%
+  summarise(mean_visits = mean(sum_annual_visits)) %>% 
+  get_confidence_interval(level = 0.95, type = "percentile")
 
+```
 
+### Expenditure Stats
 
+```{r}
+international_visits %>%
+  filter(year %in% c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019)) %>%
+  group_by(year) %>% 
+  summarise(sum_annual_exp = sum(spend)) %>% 
+  summarise(avg_annual_spend = mean(sum_annual_exp))
 
+international_spend_summary <- international_visits %>%
+  filter(year %in% c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019)) %>% 
+  group_by(year) %>% 
+  summarise(sum_annual_exp = sum(spend))
 
+international_spend_summary %>%
+  rep_sample_n(size = 11, replace = TRUE, reps = 5000) %>%
+  summarise(mean_spend = mean(sum_annual_exp)) %>% 
+  get_confidence_interval(level = 0.95, type = "percentile")
 
+```
 
+### Visitor Country of Residence
+
+```{r}
+international_visits %>% 
+  select(-c(quarter, age, sample)) %>%
+  filter(year %in% c(c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019))) %>% 
+  group_by(year, country) %>% 
+  summarise(total_spend = sum(spend)) %>% 
+  ggplot(aes(x = year, y = total_spend, colour = country)) +
+  geom_line() +
+  geom_point() +
+  scale_x_continuous(breaks = c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019)) +
+  labs(x = "\n Year",
+       y = "Expenditure (Million) \n",
+       title = "Expenditure by Country",
+       subtitle = "Top 5 Countries per Total Expenditure")
+```
 
 
