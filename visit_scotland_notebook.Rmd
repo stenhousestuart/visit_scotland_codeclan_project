@@ -30,7 +30,7 @@ marital_demographics <- read_csv(here("data/clean_data/marital_status_demographi
 children_demographics <- read_csv(here("data/clean_data/children_demographics_clean.csv"))
 car_demographics <- read_csv(here("data/clean_data/car_demographics_clean.csv"))
 social_demographics <- read_csv(here("data/clean_data/social_demographics_clean.csv"))
-regional_domestic_tourism <- read_csv(here("data/clean_data/regional_domestic_tourism_clean.csv"))
+regional_domestic_tourism_all <- read_csv(here("data/clean_data/regional_domestic_tourism_clean.csv"))
 activities <- read_csv(here("data/clean_data/activities_clean.csv"))
 usa_visit_spend_region <- read_csv(here("data/clean_data/usa_visit_spend_region_clean.csv"))
 
@@ -46,15 +46,20 @@ usa_visit_spend_region <- read_csv(here("data/clean_data/usa_visit_spend_region_
 
 demographics_all %>% 
   ggplot(aes(x = year, y = visits, group = 1)) +
-  geom_line(size = 1, colour = "grey") +
+  geom_line(size = 1.5, colour = "grey") +
   geom_point(aes(colour = visits_change_label), 
              show.legend = FALSE,
              size = 4) +
   labs(x = "\n Year",
-       y = "No. of Visits (Million) \n",
-       title = "Number of Visits Over Time") +
+       y = "No. of Day Visits (Million) \n",
+       title = "Annual Number of Day Visits") +
   scale_y_continuous(limits = c(0, 200), breaks = c(0, 100, 200)) +
-  scale_x_continuous(breaks = c(2013, 2014, 2015, 2016, 2017, 2018, 2019))
+  scale_x_continuous(breaks = c(2013, 2014, 2015, 2016, 2017, 2018, 2019)) +
+  theme(plot.title = element_text(size = 20, face = "bold"),
+        plot.subtitle = element_text(size = 10),
+        panel.background = element_rect(fill = "white"),
+        panel.grid = element_line(colour = "grey90", 
+                                  linetype = "dashed"))
 ```
 
 ### Total Expenditure Over Time
@@ -113,16 +118,51 @@ Conclusion: May suggest that there is scope for growth in other age groups, but 
 ```{r}
 age_demographics %>%
   group_by(age) %>% 
-  summarise(mean_exp_per_visit = mean(exp_per_visit)) %>% 
+  summarise(mean_visits = mean(visits)) %>% 
+  arrange(age) %>% 
   ggplot() +
-  geom_col(aes(x = reorder(age, mean_exp_per_visit), y = mean_exp_per_visit, fill = age == "45-54 years"),
+  geom_col(aes(x = age, y = mean_visits, fill = age == "16-24 years"),
            show.legend = FALSE) +
   scale_fill_manual(values = c("FALSE" = "grey40",
                                "TRUE" = "forestgreen")) +
   labs(
     x = "\n Age",
-    y = "Mean Expenditure per Visit \n",
-    title = "Mean Expenditure per Visit 2013-2019") +
+    y = "Mean Visits per Year (Million) \n",
+    title = "Mean Visits 2013-2019") +
+  coord_flip()
+```
+
+```{r}
+age_demographics %>%
+  group_by(age) %>% 
+  summarise(mean_exp = mean(expenditure)) %>% 
+  arrange(age) %>% 
+  ggplot() +
+  geom_col(aes(x = age, y = mean_exp, fill = age == "25-34 years"),
+           show.legend = FALSE) +
+  scale_fill_manual(values = c("FALSE" = "grey40",
+                               "TRUE" = "forestgreen")) +
+  labs(
+    x = "\n Age",
+    y = "Mean Visits per Year (Million) \n",
+    title = "Mean Visits 2013-2019") +
+  coord_flip()
+```
+
+
+```{r}
+age_demographics %>%
+  group_by(age) %>% 
+  summarise(mean_exp_per_visit = mean(exp_per_visit)) %>% 
+  ggplot() +
+  geom_col(aes(x = age, y = mean_exp_per_visit, fill = age == "45-54 years"),
+           show.legend = FALSE) +
+  scale_fill_manual(values = c("FALSE" = "grey40",
+                               "TRUE" = "forestgreen")) +
+  labs(
+    x = "\n Age",
+    y = "Mean Annual Expenditure \n",
+    title = "Mean Annual Expenditure 2013-2019") +
   coord_flip()
 ```
 
@@ -295,6 +335,40 @@ Conclusion: Although people in employment have the highest spend per visit there
 ```{r}
 employment_demographics %>%
   group_by(employment_status) %>% 
+  summarise(mean_exp = mean(expenditure)) %>% 
+  ggplot() +
+  geom_col(aes(x = employment_status, y = mean_exp, fill = employment_status == "Employed/self-employed (full or part time)"),
+           show.legend = FALSE) +
+  scale_fill_manual(values = c("FALSE" = "grey40",
+                               "TRUE" = "forestgreen")) +
+  labs(
+    x = "\n Employment",
+    y = "Mean Annual Spend \n",
+    title = "Mean Annual Spend 2013-2019") +
+  coord_flip()
+```
+
+
+```{r}
+employment_demographics %>%
+  group_by(employment_status) %>% 
+  summarise(mean_visits = mean(visits)) %>% 
+  ggplot() +
+  geom_col(aes(x = employment_status, y = mean_visits, fill = employment_status == "Employed/self-employed (full or part time)"),
+           show.legend = FALSE) +
+  scale_fill_manual(values = c("FALSE" = "grey40",
+                               "TRUE" = "forestgreen")) +
+  labs(
+    x = "\n Employment",
+    y = "Mean Annual Visits \n",
+    title = "Mean Annual Visits 2013-2019") +
+  coord_flip()
+```
+
+
+```{r}
+employment_demographics %>%
+  group_by(employment_status) %>% 
   summarise(mean_exp_per_visit = mean(exp_per_visit)) %>% 
   ggplot() +
   geom_col(aes(x = employment_status, y = mean_exp_per_visit, fill = employment_status == "Employed/self-employed (full or part time)"),
@@ -304,8 +378,8 @@ employment_demographics %>%
   labs(
     x = "\n Employment",
     y = "Mean Expenditure per Visit \n",
-    title = "Mean Expenditure per Visit 2013-2019",
-    subtitle = "By Employment")
+    title = "Mean Expenditure per Visit 2013-2019") +
+  coord_flip()
 ```
 
 ```{r}
@@ -325,7 +399,7 @@ employment_demographics %>%
   labs(
     x = "\n Employment Status",
     y = "% Difference \n",
-    title = "Expenditure Per Visit % Difference, 2019 vs. 2013-2018 Avg.") +
+    title = "Expenditure Per Visit % Diff, 2019 vs. 2013-2018 Avg.") +
   coord_flip() +
   scale_y_continuous(labels = scales::percent_format(scale = 1))
   
@@ -425,9 +499,45 @@ social_demographics %>%
 ```{r}
 activities %>%
   group_by(tourism_activity) %>%
+  summarise(mean_exp = mean(expenditure)) %>% 
+  ggplot() +
+  geom_col(aes(x = tourism_activity, y = mean_exp,
+               fill = tourism_activity == "Eating Out"),
+           show.legend = FALSE) +
+  scale_fill_manual(values = c("FALSE" = "grey40",
+                               "TRUE" = "forestgreen")) +
+  labs(
+    x = "\n Activity",
+    y = "Mean Annual Spend \n",
+    title = "Mean Annual Spend, 2013-2019") +
+  coord_flip()
+```
+
+
+```{r}
+activities %>%
+  group_by(tourism_activity) %>%
+  summarise(mean_visits = mean(visits)) %>% 
+  ggplot() +
+  geom_col(aes(x = tourism_activity, y = mean_visits,
+               fill = tourism_activity == "Visited friends or family for leisure"),
+           show.legend = FALSE) +
+  scale_fill_manual(values = c("FALSE" = "grey40",
+                               "TRUE" = "forestgreen")) +
+  labs(
+    x = "\n Activity",
+    y = "Mean Annual Visits \n",
+    title = "Mean Annual Visits, 2013-2019") +
+  coord_flip()
+```
+
+
+```{r}
+activities %>%
+  group_by(tourism_activity) %>%
   summarise(mean_exp_per_visit = mean(exp_per_visit)) %>% 
   ggplot() +
-  geom_col(aes(x = reorder(tourism_activity, mean_exp_per_visit), y = mean_exp_per_visit,
+  geom_col(aes(x = tourism_activity, y = mean_exp_per_visit,
                fill = tourism_activity == "Shopping for Non-Regular Purchases"),
            show.legend = FALSE) +
   scale_fill_manual(values = c("FALSE" = "grey40",
@@ -477,11 +587,11 @@ domestic_2017_2019_visits <- regional_domestic_tourism %>%
 international_2017_2019_visits <- international_visits %>%
   select(-c(quarter, age, sample)) %>%
   filter(year %in% c(2017, 2018, 2019)) %>% 
-  summarise(total_visits = sum(visits)) %>% 
-  select(total_visits)
+  summarise(mean_visits = mean(visits)) %>% 
+  select(mean_visits)
 
 tibble(a = c("Domestic", "International"),
-       b = c(domestic_2017_2019_visits$visits, international_2017_2019_visits$total_visits)) %>% 
+       b = c(domestic_2017_2019_visits$visits, international_2017_2019_visits$mean_visits)) %>% 
   ggplot() +
   geom_col(aes(x = a, y = b)) +
   labs(

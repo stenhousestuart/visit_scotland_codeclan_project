@@ -139,12 +139,31 @@ social_demographics_clean <- demographics %>%
 
 # Clean Regional Domestic Tourism Data (Overnights) ------------------------------------------------------------
 
-regional_domestic_tourism_clean <- regional_domestic_tourism %>%
-  filter(feature_code == "S92000003") %>%
+regional_domestic_tourism_all_clean <- regional_domestic_tourism %>%
+  filter(feature_code == "S92000003",
+         region_of_residence == "All of GB") %>%
   arrange(date_code) %>% 
   select(-c(measurement, units)) %>% 
   pivot_wider(names_from = breakdown_of_domestic_tourism, values_from = value) %>% 
-  clean_names()
+  clean_names() %>% 
+  mutate(exp_per_visit = expenditure / visits,
+         exp_per_visit_pct_change = (exp_per_visit - lag(exp_per_visit)) / lag(exp_per_visit) * 100,
+         nights_change_label = case_when(nights > lag(nights) ~ "Increased",
+                                         nights < lag(nights) ~ "Decreased",
+                                         nights == lag(nights) ~ "No Change",
+                                         TRUE ~ "Starting Year"),
+         visits_change_label = case_when(visits > lag(visits) ~ "Increased",
+                                         visits < lag(visits) ~ "Decreased",
+                                         visits == lag(visits) ~ "No Change",
+                                         TRUE ~ "Starting Year"),
+         exp_change_label = case_when(expenditure > lag(expenditure) ~ "Increased",
+                                      expenditure < lag(expenditure) ~ "Decreased",
+                                      expenditure == lag(expenditure) ~ "No Change",
+                                      TRUE ~ "Starting Year"),
+         exp_per_visit_label = case_when(exp_per_visit > lag(exp_per_visit) ~ "Increased",
+                                         exp_per_visit < lag(exp_per_visit) ~ "Decreased",
+                                         exp_per_visit == lag(exp_per_visit) ~ "No Change",
+                                         TRUE ~ "Starting Year"))
 
 # Create International Passenger Survey Tibble  ------------------------------------------------------------
 
@@ -235,7 +254,7 @@ write_csv(children_demographics_clean, here("data/clean_data/children_demographi
 write_csv(car_demographics_clean, here("data/clean_data/car_demographics_clean.csv"))
 write_csv(social_demographics_clean, here("data/clean_data/social_demographics_clean.csv"))
 # write_csv(domestic_day_visits_clean, here("data/clean_data/domestic_day_visits_clean.csv"))
-write_csv(regional_domestic_tourism_clean, here("data/clean_data/regional_domestic_tourism_clean.csv"))
+write_csv(regional_domestic_tourism_all_clean, here("data/clean_data/regional_domestic_tourism_all_clean.csv"))
 write_csv(activities_clean, here("data/clean_data/activities_clean.csv"))
 write_csv(usa_visit_spend_region, here("data/clean_data/usa_visit_spend_region_clean.csv"))
 
@@ -253,7 +272,7 @@ rm(social_demographics_clean)
 # rm(domestic_day_visits)
 # rm(domestic_day_visits_clean)
 rm(regional_domestic_tourism)
-rm(regional_domestic_tourism_clean)
+rm(regional_domestic_tourism_all_clean)
 rm(activities)
 rm(activities_clean)
 rm(usa_visitors_2009_2019)
