@@ -10,6 +10,8 @@ library(tidyverse)
 library(here)
 library(sf)
 library(infer)
+library(ggridges)
+library(modelr)
 ```
 
 ## Run Cleaning Script
@@ -24,6 +26,8 @@ source(here("scripts/cleaning_script.R"))
 
 regional_domestic_tourism_all <- read_csv(here("data/clean_data/regional_domestic_tourism_all_clean.csv"))
 regional_domestic_tourism_individual <- read_csv(here("data/clean_data/regional_domestic_tourism_individual_clean.csv"))
+regional_domestic_tourism_non_gb_clean <- read_csv(here("data/clean_data/regional_domestic_tourism_non_gb_clean.csv"))
+international_visits <- read_csv(here("data/clean_data/international_visits_clean.csv"))
 local_authority_geo <- st_read(dsn = "data/geo_data/", layer = "pub_las")
 
 ```
@@ -99,92 +103,55 @@ regional_domestic_tourism_all %>%
 
 #### Average Visits By Region
 
-##### Over Time
-
-```{r}
-regional_domestic_tourism_individual %>%
-  filter(visits > 1000) %>% 
-  ggplot() +
-  geom_line(aes(x = year, y = visits, colour = local_authority, group = local_authority))
-```
-
-##### Stats
-
-```{r}
-
-regional_domestic_tourism_all %>% 
-  summarise(mean_annual_visits = mean(visits))
-
-regional_domestic_tourism_all %>%
-  rep_sample_n(size = 12, replace = TRUE, reps = 5000) %>%
-  summarise(mean_visits = mean(visits)) %>% 
-  get_confidence_interval(level = 0.95, type = "percentile")
-
-```
-
-##### Map
-
 ```{r}
 
 regional_data_joined %>% 
   group_by(code) %>% 
   summarise(mean_visits = mean(visits)) %>% 
   ggplot(aes(fill = mean_visits)) + 
-  geom_sf() +
+  geom_sf(colour = "grey90", size = 0.1) +
   labs(
     x = "Longitude",
     y = "Latitude",
     title = "Average Annual Number of Domestic Vistors",
     subtitle = "By Region",
-    fill = "Visits (Thousands)"
-  ) +
-  theme(panel.background = element_rect(fill = "white"))
+    fill = "Visits (Thousands)") +
+  theme(panel.background = element_rect(fill = "white"),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        rect = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())
 
 ```
 
 #### Expenditure by Region
-
-##### Over Time
-
-```{r}
-regional_domestic_tourism_individual %>%
-  filter(expenditure > 300) %>% 
-  ggplot() +
-  geom_line(aes(x = year, y = expenditure, colour = local_authority, group = local_authority))
-```
-
-##### Stats
-
-```{r}
-regional_domestic_tourism_all %>% 
-  summarise(mean_annual_exp = mean(expenditure))
-
-regional_domestic_tourism_all %>%
-  rep_sample_n(size = 12, replace = TRUE, reps = 5000) %>%
-  summarise(mean_annual_exp = mean(expenditure)) %>% 
-  get_confidence_interval(level = 0.95, type = "percentile")
-
-```
-
-##### Map
 
 ```{r}
 regional_data_joined %>% 
   group_by(code) %>% 
   summarise(mean_exp = mean(expenditure)) %>% 
   ggplot(aes(fill = mean_exp)) + 
-  geom_sf() +
+  geom_sf(colour = "grey90", size = 0.1) +
   labs(
     x = "Longitude",
     y = "Latitude",
     title = "Average Annual Expenditure of Domestic Vistors",
     subtitle = "By Region",
-    fill = "Expenditure (Million GBP)"
-  ) +
-  theme(panel.background = element_rect(fill = "white"))
+    fill = "Expenditure (Million GBP)") +
+    theme(panel.background = element_rect(fill = "white"),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        rect = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())
 ```
 
 #### Spend Per Visit
+
+##### Plot
 
 ```{r}
 regional_domestic_tourism_individual %>%
@@ -208,6 +175,183 @@ regional_domestic_tourism_individual %>%
     subtitle = "By Region")
 ```
 
+#### Nights Stayed
+
+##### Plot
+
+```{r}
+regional_domestic_tourism_individual %>% 
+  mutate(nights_per_visit = nights / visits) %>% 
+  group_by(local_authority) %>% 
+  summarise(mean_nights_per_visit = mean(nights_per_visit, na.rm = TRUE)) %>%
+  ggplot() +
+  geom_col(aes(x = reorder(local_authority, mean_nights_per_visit), y = mean_nights_per_visit,
+               fill = local_authority %in% c("Shetland Islands", "Orkney Islands", "Na h-Eileanan Siar",
+                                             "City of Edinburgh", "Glasgow City")),
+           show.legend = FALSE, colour = "white") +
+  scale_fill_manual(values = c("FALSE" = "grey60",
+                               "TRUE" = "#540453")) +
+  coord_flip() +
+  labs(
+    x = "Region",
+    y = "Avg. Nights per Visit",
+    title = "Domestic Tourism Avg. Nights per Visit",
+    subtitle = "By Region")
+```
+
+##### Map
+
+```{r}
+regional_data_joined %>%
+  mutate(nights_per_visit = nights / visits) %>% 
+  group_by(local_authority) %>% 
+  summarise(mean_nights_per_visit = mean(nights_per_visit, na.rm = TRUE)) %>%
+  ggplot(aes(fill = mean_nights_per_visit)) + 
+  geom_sf(colour = "grey90", size = 0.1) +
+  labs(
+    x = "Longitude",
+    y = "Latitude",
+    title = "Domestic Tourism Mean Nights per Visit",
+    subtitle = "By Region",
+    fill = "Mean Nights per Visit"
+  ) +
+  theme(panel.background = element_rect(fill = "white"),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        rect = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())
+  
+```
+
+#### Marketing Edinburgh to Domestic Tourists: Mini Case Study
+
+##### Visits by Country of Residence
+
+```{r}
+regional_domestic_tourism_non_gb_clean %>%
+  filter(local_authority %in% c("City of Edinburgh")) %>% 
+  ggplot(aes(x = visits, y = region_of_residence, fill = region_of_residence == "Scotland")) +
+  geom_density_ridges(show.legend = FALSE, alpha = 0.5) +
+  theme_ridges() +
+  theme(axis.title.y = element_blank()) +
+  scale_fill_manual(values = c("FALSE" = "#1d1d65",
+                               "TRUE" = "#540453")) +
+  labs(
+    title = "Distribution of Annual Visits by Country of Residence",
+    subtitle = "Edinburgh",
+    x = "Visits (Thousands)")
+```
+
+##### Spend Per Visit by Country of Residence
+
+```{r}
+regional_domestic_tourism_non_gb_clean %>%
+  filter(local_authority %in% c("City of Edinburgh")) %>%
+  mutate(exp_per_visit = expenditure / visits) %>% 
+  ggplot(aes(x = exp_per_visit, y = region_of_residence, fill = region_of_residence == "Scotland")) +
+  geom_density_ridges(show.legend = FALSE, alpha = 0.5) +
+  theme_ridges() +
+  theme(axis.title.y = element_blank()) +
+  scale_fill_manual(values = c("FALSE" = "#1d1d65",
+                               "TRUE" = "#540453")) +
+  labs(
+    title = "Distribution of Expenditure per Visit by Country of Residence",
+    subtitle = "Edinburgh",
+    x = "Expenditure per Visit (Million GBP / Thousand Visits)")
+```
+
+##### Nights by Country of Residence
+
+```{r}
+regional_domestic_tourism_non_gb_clean %>%
+  filter(local_authority %in% c("City of Edinburgh")) %>% 
+  mutate(nights_per_visit = nights / visits) %>%
+  ggplot(aes(x = nights_per_visit, y = region_of_residence, fill = region_of_residence == "Scotland")) +
+  geom_density_ridges(show.legend = FALSE, alpha = 0.5) +
+  theme_ridges() +
+  theme(axis.title.y = element_blank()) +
+  scale_fill_manual(values = c("FALSE" = "#1d1d65",
+                               "TRUE" = "#540453")) +
+  labs(
+    title = "Distribution of Nights by Country of Residence",
+    subtitle = "Edinburgh",
+    x = "Nights")
+```
+
+
+##### Linear Model: Predict Spend by Visits & Nights?
+
+
+```{r}
+regional_domestic_tourism_non_gb_clean %>% 
+  filter(local_authority == "City of Edinburgh",
+         region_of_residence == "England") %>% 
+  summarise(cor(expenditure, visits))
+```
+
+```{r}
+regional_domestic_tourism_non_gb_clean %>% 
+  filter(local_authority == "City of Edinburgh",
+         region_of_residence == "England") %>% 
+  summarise(cor(expenditure, nights))
+```
+
+```{r}
+edinburgh_england <- regional_domestic_tourism_non_gb_clean %>% 
+  filter(local_authority == "City of Edinburgh",
+         region_of_residence == "England")
+```
+
+
+```{r}
+model_edinburgh <- lm(formula = expenditure ~ visits, data = edinburgh_england)
+summary(model_edinburgh)
+```
+
+```{r}
+edinburgh_england %>%
+  add_predictions(model_edinburgh) %>%
+  add_residuals(model_edinburgh) %>% 
+  ggplot(aes(x = visits, y = expenditure)) +
+  geom_point() +
+  geom_line(aes(y = pred), col = "#970061", size = 1) +
+  labs(
+    x = "Visits (Thousands)",
+    y = "Expenditure (Million GBP)",
+    title = "English Based Visitors To Edinburgh: Expenditure / Visits",
+    subtitle = "Based On 3 Year Annual Averages Between 2009-2019")
+```
+Model: spend ~ visits
+
+Interpretation: ~97% of the variation in expenditure can be explained by the number of visits. 
+
+Question: The largest increase in visitor numbers is from 2009-2011 Avg. to 2010-2012 Avg. ~6%. If this percentage increase in visits was replicated in based on the most recent set of figures resulting in ~1803 (Thousand) visitors - what would the model predict for expenditure?
+
+Answer: If visits were increased as above, the model would predict expenditure of ~632 Million GBP (Low Estimate ~620, High Estimate ~644)
+
+As calculated below.
+
+Step 1.
+outcome = b0 + b1 * 1st Predictor
+
+Step 2.
+expenditure = b0(intercept) + b1(coefficient) * 1st Predictor
+
+Step 3.
+expenditure = b0(intercept) + b1(coefficient) * `visits`
+
+Step 4.
+expenditure = -493.61749 + 0.62423 * `1803`
+
+Step 5.
+expenditure = ~632 (Low Estimate ~620, High Estimate ~644)
+
+```{r}
+632 + c(-12.34, 12.34)
+```
+
 ## International Tourism
 
 ### Visit Stats
@@ -218,16 +362,6 @@ international_visits %>%
   group_by(year) %>% 
   summarise(sum_annual_visits = sum(visits)) %>% 
   summarise(avg_annual_visits = mean(sum_annual_visits))
-
-international_visits_summary <- international_visits %>%
-  filter(year %in% c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019)) %>%
-  group_by(year) %>% 
-  summarise(sum_annual_visits = sum(visits))
-
-international_visits_summary %>%
-  rep_sample_n(size = 11, replace = TRUE, reps = 5000) %>%
-  summarise(mean_visits = mean(sum_annual_visits)) %>% 
-  get_confidence_interval(level = 0.95, type = "percentile")
 
 ```
 
@@ -240,34 +374,105 @@ international_visits %>%
   summarise(sum_annual_exp = sum(spend)) %>% 
   summarise(avg_annual_spend = mean(sum_annual_exp))
 
-international_spend_summary <- international_visits %>%
-  filter(year %in% c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019)) %>% 
-  group_by(year) %>% 
-  summarise(sum_annual_exp = sum(spend))
-
-international_spend_summary %>%
-  rep_sample_n(size = 11, replace = TRUE, reps = 5000) %>%
-  summarise(mean_spend = mean(sum_annual_exp)) %>% 
-  get_confidence_interval(level = 0.95, type = "percentile")
-
 ```
 
-### Visitor Country of Residence
+### Visitors by Country of Residence
 
 ```{r}
 international_visits %>% 
   select(-c(quarter, age, sample)) %>%
-  filter(year %in% c(c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019))) %>% 
-  group_by(year, country) %>% 
-  summarise(total_spend = sum(spend)) %>% 
-  ggplot(aes(x = year, y = total_spend, colour = country)) +
-  geom_line() +
-  geom_point() +
-  scale_x_continuous(breaks = c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019)) +
-  labs(x = "\n Year",
-       y = "Expenditure (Million) \n",
-       title = "Expenditure by Country",
-       subtitle = "Top 5 Countries per Total Expenditure")
+  filter(year %in% c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019)) %>% 
+  group_by(country) %>% 
+  summarise(total_visits = sum(visits)) %>%
+  slice_max(total_visits, n = 20) %>% 
+  ggplot(aes(x = reorder(country, total_visits), y = total_visits)) +
+  geom_col(aes(x = reorder(country, total_visits), y = total_visits,
+               fill = country %in% c("USA")),
+           show.legend = FALSE, colour = "white") +
+  scale_fill_manual(values = c("FALSE" = "grey60",
+                               "TRUE" = "#540453")) +
+  coord_flip() +
+  labs(
+    x = "Country",
+    y = "Total Visits (Thousands)",
+    title = "International Tourism: Total Visits (2002-2009)",
+    subtitle = "Top 20")
 ```
 
+### Spend by Country of Residence
 
+```{r}
+international_visits %>% 
+  select(-c(quarter, age, sample)) %>%
+  filter(year %in% c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019)) %>% 
+  group_by(country) %>% 
+  summarise(total_spend = sum(spend)) %>%
+  slice_max(total_spend, n = 20) %>% 
+  ggplot() +
+  geom_col(aes(x = reorder(country, total_spend), y = total_spend,
+               fill = country %in% c("USA")),
+           show.legend = FALSE, colour = "white") +
+  scale_fill_manual(values = c("FALSE" = "grey60",
+                               "TRUE" = "#540453")) +
+  coord_flip() +
+  labs(
+    x = "Country",
+    y = "Total Spend (Million GBP)",
+    title = "International Tourism: Total Spend (2002-2009)",
+    subtitle = "Top 20")
+```
+
+### Spend per Visit by Country of Residence
+
+```{r}
+international_visits %>% 
+  select(-c(quarter, age, sample)) %>%
+  filter(year %in% c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019)) %>% 
+  group_by(country) %>% 
+  summarise(total_spend = sum(spend),
+            total_visits = sum(visits),
+            spend_per_visit = total_spend / total_visits) %>%
+  filter(total_visits > 500) %>%
+  ggplot() +
+  geom_col(aes(x = reorder(country, spend_per_visit), y = spend_per_visit,
+               fill = country %in% c("Australia", "China", "Canada", "Switzerland")),
+           show.legend = FALSE, colour = "white") +
+  scale_fill_manual(values = c("FALSE" = "grey60",
+                               "TRUE" = "#540453")) +
+  coord_flip() +
+  labs(
+    x = "Country",
+    y = "Total Spend (Million GBP) / Visit (Thousands)",
+    title = "International Tourism: Total Spend per Visit (2002-2009)",
+    subtitle = "Countries w/ Over 500 Thousand Total Visits")
+```
+
+### Group of High Value Countries
+
+```{r}
+international_visits %>% 
+  select(-c(quarter, age, sample)) %>%
+  filter(year %in% c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019)) %>% 
+  group_by(country) %>% 
+  summarise(total_spend = sum(spend),
+            total_visits = sum(visits),
+            spend_per_visit = total_spend / total_visits) %>%
+  filter(total_visits > 500) %>% 
+  ggplot(aes(x = total_visits, y = spend_per_visit)) +
+  geom_point(aes(colour = country %in% c("Australia", "China", "Canada", "Switzerland")), 
+             show.legend = FALSE,
+             size = 4) +
+  scale_colour_manual(values = c("FALSE" = "grey60",
+                                 "TRUE" = "#970061")) +
+  ggrepel::geom_text_repel(aes(x = total_visits, y = spend_per_visit, label = country)) +
+  labs(
+    x = "Visits (Thousands)",
+    y = "Total Spend (Million GBP) / Visit (Thousands)",
+    title = "International Tourism: Visits vs. Spend Per Visit (2002-2009)",
+    subtitle = "Countries w/ Over 500 Thousand Total Visits")
+```
+
+### By Region Visited
+
+"Information at the regional level is often based on very small sample sizes"  
+"The International Passenger Survey is a national survey, and is not designed to be statistically robust at the regional level."

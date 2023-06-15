@@ -13,8 +13,9 @@ regional_domestic_tourism <- read_csv("data/raw_data/regional_domestic_tourism.c
 
 local_authority_codes <- read_csv("data/raw_data/local_authority_codes.csv")
 
-international_visits <- read_csv("data/raw_data/international-passenger-survey-scotland-2019.csv") %>%
-  clean_names()
+international_visits <- read_csv("data/raw_data/international-passenger-survey-scotland-2019.csv")
+
+local_authority_geo <- st_read(dsn = "data/geo_data/", layer = "pub_las")
 
 # demographics <- read_csv("data/raw_data/tourism_day_visits_demographics.csv") %>% 
 #   clean_names()
@@ -139,6 +140,11 @@ international_visits <- read_csv("data/raw_data/international-passenger-survey-s
 #   rename(year = date_code) %>% 
 #   clean_names()
 
+# Clean International Tourism Data ------------------------------------------------------------
+
+international_visits_clean <- international_visits %>% 
+  clean_names()
+
 # Clean Regional Domestic Tourism Data ------------------------------------------------------------
 
 regional_domestic_tourism_all_clean <- regional_domestic_tourism %>%
@@ -176,7 +182,17 @@ regional_domestic_tourism_individual_clean <- regional_domestic_tourism %>%
   pivot_wider(names_from = breakdown_of_domestic_tourism, values_from = value) %>% 
   clean_names() %>%
   rename(year = date_code) %>% 
-  inner_join(local_authority_codes, by = "feature_code") %>% 
+  inner_join(local_authority_codes, by = "feature_code")
+
+regional_domestic_tourism_non_gb_clean <- regional_domestic_tourism %>%
+  filter(feature_code != "S92000003",
+         region_of_residence != "All of GB") %>%
+  arrange(date_code) %>% 
+  select(-c(measurement, units)) %>% 
+  pivot_wider(names_from = breakdown_of_domestic_tourism, values_from = value) %>% 
+  clean_names() %>%
+  rename(year = date_code) %>% 
+  inner_join(local_authority_codes, by = "feature_code")
   
 regional_data_joined <- local_authority_geo %>% 
   left_join(regional_domestic_tourism_individual_clean, by = c("code" = "feature_code"))
@@ -265,6 +281,8 @@ regional_data_joined <- local_authority_geo %>%
 
 write_csv(regional_domestic_tourism_all_clean, here("data/clean_data/regional_domestic_tourism_all_clean.csv"))
 write_csv(regional_domestic_tourism_individual_clean, here("data/clean_data/regional_domestic_tourism_individual_clean.csv"))
+write_csv(regional_domestic_tourism_non_gb_clean, here("data/clean_data/regional_domestic_tourism_non_gb_clean.csv"))
+write_csv(international_visits_clean, here("data/clean_data/international_visits_clean.csv"))
 
 # write_csv(all_demographics_clean, here("data/clean_data/all_demographics_clean.csv"))
 # write_csv(employment_demographics_clean, here("data/clean_data/employment_demographics_clean.csv"))
@@ -283,7 +301,11 @@ write_csv(regional_domestic_tourism_individual_clean, here("data/clean_data/regi
 rm(regional_domestic_tourism)
 rm(regional_domestic_tourism_all_clean)
 rm(regional_domestic_tourism_individual_clean)
+rm(regional_domestic_tourism_non_gb_clean)
 rm(local_authority_codes)
+rm(international_visits_clean)
+rm(international_visits)
+rm(local_authority_geo)
 
 # rm(demographics)
 # rm(all_demographics_clean)
