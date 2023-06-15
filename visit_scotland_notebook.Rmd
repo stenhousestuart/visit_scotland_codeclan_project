@@ -476,3 +476,49 @@ international_visits %>%
 
 "Information at the regional level is often based on very small sample sizes"  
 "The International Passenger Survey is a national survey, and is not designed to be statistically robust at the regional level."
+
+### By Season
+
+```{r}
+international_visits %>%
+  filter(country == "Canada") %>% 
+  mutate(exp_per_visit = spend / visits,
+         spring_summer = if_else(quarter %in% c("Quarter 2", "Quarter 3"), "Yes", "No")) %>%  group_by(spring_summer) %>% 
+  summarise(mean_visits = mean(visits),
+            mean_exp = mean(spend),
+            mean_exp_per_visit = mean(exp_per_visit))
+```
+```{r}
+canada_sample <- international_visits %>%
+  filter(country == "Canada") %>% 
+  mutate(exp_per_visit = spend / visits,
+         spring_summer = if_else(quarter %in% c("Quarter 2", "Quarter 3"), "Yes", "No"))
+```
+
+```{r}
+observed_stat <- canada_sample %>% 
+  specify(exp_per_visit ~ spring_summer) %>%
+  calculate(stat = "diff in means", order = c("Yes", "No"))
+
+observed_stat
+```
+
+```{r}
+null_distribution <- canada_sample %>% 
+  specify(response = exp_per_visit, explanatory = spring_summer) %>%
+  hypothesize(null = "independence") %>%
+  generate(reps = 1000, type = "permute") %>% 
+  calculate(stat = "diff in means", order = c("Yes", "No"))
+```
+
+```{r}
+null_distribution %>%
+  visualise() +
+  shade_p_value(obs_stat = observed_stat, direction = "both")
+```
+
+```{r}
+null_distribution %>%
+  get_p_value(obs_stat = observed_stat, direction = "both")
+```
+
