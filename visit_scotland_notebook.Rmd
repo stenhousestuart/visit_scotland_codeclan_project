@@ -40,14 +40,13 @@ local_authority_geo <- st_read(dsn = "data/geo_data/", layer = "pub_las")
 
 regional_domestic_tourism_all %>%
   ggplot(aes(x = date_code, y = visits)) +
-  geom_line(group = 1) +
-  geom_point(aes(colour = visits_change_label), 
-             show.legend = FALSE,
-             size = 4) +
+  geom_line(group = 1, size = 1, colour = "#540453") +
+  geom_point(colour = "#970061", show.legend = FALSE, size = 4) +
   labs(x = "\n Year Range",
        y = "Visitors (Thousands) \n",
        title = "Average Annual Number of Domestic Vistors",
-       subtitle = "3 Year Average")
+       subtitle = "3 Year Average") +
+  ylim(0, 13000)
 
 ```
 
@@ -57,14 +56,13 @@ regional_domestic_tourism_all %>%
 
 regional_domestic_tourism_all %>%
   ggplot(aes(x = date_code, y = expenditure)) +
-  geom_line(group = 1) +
-  geom_point(aes(colour = exp_change_label), 
-             show.legend = FALSE,
-             size = 4) +
+  geom_line(group = 1, size = 1, colour = "#540453") +
+  geom_point(colour = "#970061", show.legend = FALSE, size = 4) +
   labs(x = "\n Year Range",
        y = "Expenditure (Million GBP) \n",
        title = "Average Annual Expenditure of Domestic Vistors",
-       subtitle = "3 Year Average")
+       subtitle = "3 Year Average") +
+  ylim(0, 3500)
 
 ```
 ### Domestic Tourism / Nights Stayed
@@ -73,10 +71,8 @@ regional_domestic_tourism_all %>%
 
 regional_domestic_tourism_all %>%
   ggplot(aes(x = date_code, y = nights)) +
-  geom_line(group = 1) +
-  geom_point(aes(colour = nights_change_label), 
-             show.legend = FALSE,
-             size = 4) +
+  geom_line(group = 1, size = 1, colour = "#540453") +
+  geom_point(colour = "#970061", show.legend = FALSE, size = 4) +
   labs(x = "\n Year Range",
        y = "Nights (Thousands) \n",
        title = "Average Annual Nights Stayed by Domestic Vistors",
@@ -89,10 +85,8 @@ regional_domestic_tourism_all %>%
 ```{r}
 regional_domestic_tourism_all %>%
   ggplot(aes(x = date_code, y = exp_per_visit)) +
-  geom_line(group = 1) +
-  geom_point(aes(colour = exp_per_visit_label), 
-             show.legend = FALSE,
-             size = 4) +
+  geom_line(group = 1, size = 1, colour = "#540453") +
+  geom_point(colour = "#970061", show.legend = FALSE, size = 4) +
   labs(x = "\n Year Range",
        y = "3x Year Average Expenditure per Visit (Thousands) \n",
        title = "Average Expenditure Per Visit Domestic Vistors",
@@ -151,7 +145,7 @@ regional_data_joined %>%
 
 #### Spend Per Visit
 
-##### Plot
+##### Mean Spend Per Visit Plot
 
 ```{r}
 regional_domestic_tourism_individual %>%

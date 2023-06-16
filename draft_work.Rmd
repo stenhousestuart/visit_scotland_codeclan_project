@@ -982,3 +982,89 @@ clusterings %>%
 
 
 -----------------------------------------------------------
+
+```{r}
+
+library(broom)
+library(factoextra)
+
+international_summary <- international_visits %>% 
+  select(-c(quarter, age, sample)) %>%
+  filter(year %in% c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019),
+         !country %in% c("USA", "Germany")) %>% 
+  group_by(country) %>% 
+  summarise(total_spend = sum(spend),
+            total_visits = sum(visits),
+            spend_per_visit = total_spend / total_visits)
+  # filter(total_visits > 500,
+  #        spend_per_visit > 0.5)
+
+international_clust <- international_visits %>% 
+  select(-c(quarter, age, sample)) %>%
+  filter(year %in% c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019),
+         !country %in% c("USA", "Germany")) %>% 
+  group_by(country) %>% 
+  summarise(total_spend = sum(spend),
+            total_visits = sum(visits),
+            spend_per_visit = total_spend / total_visits) %>% 
+  # filter(total_visits > 500,
+  #        spend_per_visit > 0.5) %>% 
+  select(total_visits, spend_per_visit)
+
+```
+
+```{r}
+
+
+k_clusters <- tibble(k = 1:63) %>% 
+  mutate(kclust = map(k, ~ kmeans(international_clust,
+                                  centers = .x,
+                                  nstart = 25)),
+         tidied = map(kclust, tidy),
+         glanced = map(kclust, glance),
+         augmented = map(kclust, augment, international_summary))
+
+# Unnest `glanced` to view `tot.withinss`
+clusterings <- k_clusters %>% 
+  unnest(glanced)
+
+clusterings
+```
+
+```{r}
+clusterings %>% 
+  ggplot(aes(x = k, y = tot.withinss)) +
+  geom_point() +
+  geom_line() +
+  scale_x_continuous(breaks = seq(1, 25, 1))
+```
+
+```{r}
+fviz_nbclust(international_clust,
+             kmeans,
+             method = "wss", #within sum of squares
+             nstart = 25)
+```
+
+```{r}
+fviz_nbclust(international_clust,
+             kmeans,
+             method = "silhouette",
+             nstart = 25)
+```
+
+```{r}
+clusterings %>% 
+  unnest(augmented) %>% # Unnest augmented created in step 5.1
+  filter(k == 2) %>% # Set number of clusters
+  ggplot(aes(x = total_visits, y = spend_per_visit, colour = .cluster)) +
+  geom_point()
+```
+
+```{r}
+clusterings %>% 
+  unnest(augmented) %>% # Unnest augmented created in step 5.1
+  filter(k == 4) %>% 
+  group_by(.cluster) %>% 
+  filter(.cluster == 2)
+```
