@@ -12,6 +12,7 @@ library(sf)
 library(infer)
 library(ggridges)
 library(modelr)
+library(skimr)
 ```
 
 ## Run Cleaning Script
@@ -32,6 +33,58 @@ local_authority_geo <- st_read(dsn = "data/geo_data/", layer = "pub_las")
 
 ```
 
+## Annual Average Stats
+
+#### 5 Figure Summary
+
+```{r}
+regional_domestic_tourism_all %>% 
+  skim()
+```
+
+#### IQR
+
+```{r}
+regional_domestic_tourism_all %>% 
+  summarise(visits_iqr= IQR(visits),
+            expenditure_iqr= IQR(expenditure))
+```
+
+#### Median
+
+```{r}
+regional_domestic_tourism_all %>% 
+  summarise(median_visits = median(visits),
+            median_expenditure = median(expenditure))
+
+```
+
+### Annual Average Boxplots
+
+```{r}
+regional_domestic_tourism_all %>% 
+  ggplot(aes(x = visits, y = region_of_residence)) +
+  geom_boxplot(fill = "#540453", alpha = 0.5) +
+  stat_summary(fun.y = mean, geom = "point", shape = 4, size = 5, color = "#1d1d65", fill="#1d1d65") +
+  labs(
+    title = "Distribution of Annual Number of Domestic Vistors",
+    x = "Visits (Thousands)",
+    y = "Region of Residence",
+    subtitle = "3 Year Averages")
+```
+
+```{r}
+regional_domestic_tourism_all %>% 
+  ggplot(aes(x = expenditure, y = region_of_residence)) +
+  geom_boxplot(fill = "#1d1d65", alpha = 0.5) +
+  stat_summary(fun.y = mean, geom = "point", shape = 4, size = 5, color="#540453", fill="#540453") +
+  labs(
+    title = "Distribution of Average Annual Expenditure of Domestic Vistors",
+    x = "Expenditure (Million GBP)",
+    y = "Region of Residence",
+    subtitle = "3 Year Averages")
+```
+
 ## Trends Over Time
 
 ### Domestic Tourism / Visits
@@ -45,7 +98,7 @@ regional_domestic_tourism_all %>%
   labs(x = "\n Year Range",
        y = "Visitors (Thousands) \n",
        title = "Average Annual Number of Domestic Vistors",
-       subtitle = "3 Year Average") +
+       subtitle = "3 Year Averages") +
   ylim(0, 13000)
 
 ```
@@ -61,7 +114,7 @@ regional_domestic_tourism_all %>%
   labs(x = "\n Year Range",
        y = "Expenditure (Million GBP) \n",
        title = "Average Annual Expenditure of Domestic Vistors",
-       subtitle = "3 Year Average") +
+       subtitle = "3 Year Averages") +
   ylim(0, 3500)
 
 ```
@@ -348,27 +401,21 @@ expenditure = ~632 (Low Estimate ~620, High Estimate ~644)
 
 ## International Tourism
 
-### Visit Stats
+### Annual Average Stats
+
+#### Mean
 
 ```{r}
 international_visits %>%
   filter(year %in% c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019)) %>% 
   group_by(year) %>% 
-  summarise(sum_annual_visits = sum(visits)) %>% 
-  summarise(avg_annual_visits = mean(sum_annual_visits))
-
+  summarise(sum_annual_visits = sum(visits),
+            sum_annual_spend = sum(spend)) %>%
+  summarise(mean_annual_visits = mean(sum_annual_visits),
+            mean_annual_spend = mean(sum_annual_spend))
 ```
 
 ### Expenditure Stats
-
-```{r}
-international_visits %>%
-  filter(year %in% c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019)) %>%
-  group_by(year) %>% 
-  summarise(sum_annual_exp = sum(spend)) %>% 
-  summarise(avg_annual_spend = mean(sum_annual_exp))
-
-```
 
 ### Visitors by Country of Residence
 
