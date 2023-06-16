@@ -29,6 +29,7 @@ regional_domestic_tourism_all <- read_csv(here("data/clean_data/regional_domesti
 regional_domestic_tourism_individual <- read_csv(here("data/clean_data/regional_domestic_tourism_individual_clean.csv"))
 regional_domestic_tourism_non_gb_clean <- read_csv(here("data/clean_data/regional_domestic_tourism_non_gb_clean.csv"))
 international_visits <- read_csv(here("data/clean_data/international_visits_clean.csv"))
+tourism_businesses <- read_csv(here("data/clean_data/tourism_businesses_clean.csv"))
 local_authority_geo <- st_read(dsn = "data/geo_data/", layer = "pub_las")
 
 ```
@@ -422,7 +423,8 @@ international_visits %>%
 ```{r}
 international_visits %>% 
   select(-c(quarter, age, sample)) %>%
-  filter(year %in% c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019)) %>% 
+  filter(year %in% c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019),
+         purpose == "Holiday") %>% 
   group_by(country) %>% 
   summarise(total_visits = sum(visits)) %>%
   slice_max(total_visits, n = 20) %>% 
@@ -437,7 +439,7 @@ international_visits %>%
     x = "Country",
     y = "Total Visits (Thousands)",
     title = "International Tourism: Total Visits (2002-2009)",
-    subtitle = "Top 20")
+    subtitle = "Top 20 (Holiday Only)")
 ```
 
 ### Spend by Country of Residence
@@ -445,7 +447,8 @@ international_visits %>%
 ```{r}
 international_visits %>% 
   select(-c(quarter, age, sample)) %>%
-  filter(year %in% c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019)) %>% 
+  filter(year %in% c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019),
+         purpose == "Holiday") %>% 
   group_by(country) %>% 
   summarise(total_spend = sum(spend)) %>%
   slice_max(total_spend, n = 20) %>% 
@@ -460,7 +463,7 @@ international_visits %>%
     x = "Country",
     y = "Total Spend (Million GBP)",
     title = "International Tourism: Total Spend (2002-2009)",
-    subtitle = "Top 20")
+    subtitle = "Top 20 (Holiday Only)")
 ```
 
 ### Spend per Visit by Country of Residence
@@ -468,7 +471,8 @@ international_visits %>%
 ```{r}
 international_visits %>% 
   select(-c(quarter, age, sample)) %>%
-  filter(year %in% c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019)) %>% 
+  filter(year %in% c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019),
+         purpose == "Holiday") %>% 
   group_by(country) %>% 
   summarise(total_spend = sum(spend),
             total_visits = sum(visits),
@@ -476,7 +480,7 @@ international_visits %>%
   filter(total_visits > 500) %>%
   ggplot() +
   geom_col(aes(x = reorder(country, spend_per_visit), y = spend_per_visit,
-               fill = country %in% c("Australia", "China", "Canada", "Switzerland")),
+               fill = country %in% c("Australia", "China", "Canada")),
            show.legend = FALSE, colour = "white") +
   scale_fill_manual(values = c("FALSE" = "grey60",
                                "TRUE" = "#540453")) +
@@ -485,7 +489,7 @@ international_visits %>%
     x = "Country",
     y = "Total Spend (Million GBP) / Visit (Thousands)",
     title = "International Tourism: Total Spend per Visit (2002-2009)",
-    subtitle = "Countries w/ Over 500 Thousand Total Visits")
+    subtitle = "Countries w/ Over 500 Thousand Total Visits (Holiday Only)")
 ```
 
 ### Group of High Value Countries
@@ -493,14 +497,15 @@ international_visits %>%
 ```{r}
 international_visits %>% 
   select(-c(quarter, age, sample)) %>%
-  filter(year %in% c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019)) %>% 
+  filter(year %in% c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019),
+         purpose == "Holiday") %>% 
   group_by(country) %>% 
   summarise(total_spend = sum(spend),
             total_visits = sum(visits),
             spend_per_visit = total_spend / total_visits) %>%
   filter(total_visits > 500) %>% 
   ggplot(aes(x = total_visits, y = spend_per_visit)) +
-  geom_point(aes(colour = country %in% c("Australia", "China", "Canada", "Switzerland")), 
+  geom_point(aes(colour = country %in% c("Australia", "China", "Canada")), 
              show.legend = FALSE,
              size = 4) +
   scale_colour_manual(values = c("FALSE" = "grey60",
@@ -510,7 +515,7 @@ international_visits %>%
     x = "Visits (Thousands)",
     y = "Total Spend (Million GBP) / Visit (Thousands)",
     title = "International Tourism: Visits vs. Spend Per Visit (2002-2009)",
-    subtitle = "Countries w/ Over 500 Thousand Total Visits")
+    subtitle = "Countries w/ Over 500 Thousand Total Visits (Holiday Only)")
 ```
 
 ### By Region Visited
@@ -522,7 +527,8 @@ international_visits %>%
 
 ```{r}
 international_visits %>%
-  filter(country == "Canada") %>% 
+  filter(country == "Canada",
+         purpose == "Holiday") %>% 
   mutate(exp_per_visit = spend / visits,
          spring_summer = if_else(quarter %in% c("Quarter 2", "Quarter 3"), "Yes", "No")) %>%  group_by(spring_summer) %>% 
   summarise(mean_visits = mean(visits),
@@ -531,7 +537,8 @@ international_visits %>%
 ```
 ```{r}
 canada_sample <- international_visits %>%
-  filter(country == "Canada") %>% 
+  filter(country == "Canada",
+         purpose == "Holiday") %>% 
   mutate(exp_per_visit = spend / visits,
          spring_summer = if_else(quarter %in% c("Quarter 2", "Quarter 3"), "Yes", "No"))
 ```

@@ -3,6 +3,161 @@ title: "Draft Work Notebook"
 output: html_notebook
 ---
 
+```{r}
+# Clean Activities Data ------------------------------------------------------------
+
+# activities_clean <- activities %>%
+#   filter(tourism_activity != "All") %>% 
+#   select(-c(measurement, units)) %>%
+#   arrange(date_code) %>% 
+#   pivot_wider(names_from = breakdown_of_domestic_tourism, values_from = value) %>% 
+#   mutate(exp_per_visit = Expenditure / Visits,
+#          tourism_activity = recode(tourism_activity,
+#                                    "Day out to a beauty/health centre/spa, etc." = "Beauty/Health Centre/Spa",
+#                                    "Day trips/excursions for other leisure purpose" = "Day Trips for Other Leisure Purpose",
+#                                    "Entertainment - to a cinema, concert or theatre	" = "Entertainment (eg. Cinema, Concert)",
+#                                    "General day out/ to explore an area" = "General Day Out / Explore an Area",
+#                                    "Leisure activities e.g. hobbies & evening classes" = "Leisure Activities (eg. Hobbies)",
+#                                    "Night out to a bar, pub and/or club" = "Night Out (eg. Bar, Pub)",
+#                                    "Outdoor leisure activities e.g. walking, golf" = "Outdoor Leisure (eg. Golf)",
+#                                    "Shopping for items that you do not regularly buy" = "Shopping for Non-Regular Purchases",
+#                                    "Special personal events e.g. wedding, graduation" = "Special Personal Event (eg. Wedding)",
+#                                    "Special public event e.g. festival, exhibition" = "Special Public Event (eg. Festival)",
+#                                    "Sport participation, e.g. exercise classes, gym" = "Sport Participation",
+#                                    "Visited friends or family for leisure	" = "Visiting Friends/Family for Leisure",
+#                                    "Visitor attraction e.g. theme park, museum, zoo" = "Visitor Attraction (eg. Museum)",
+#                                    "Watched live sporting events (not on TV)" = "Attending Sporting Event",
+#                                    "Went out for a meal" = "Eating Out")) %>% 
+#   rename(year = date_code) %>% 
+#   clean_names()
+
+# Clean Demographic Data ------------------------------------------------------------
+
+# all_demographics_clean <- demographics %>%
+#   filter(age == "All", marital_status == "All", gender == "All", employment_status == "All",
+#          children == "All",  access_to_car == "All", social_grade == "All") %>%
+#   select(-c(measurement, units)) %>% 
+#   pivot_wider(names_from = breakdown_of_domestic_tourism, values_from = value) %>%
+#   arrange(date_code) %>% 
+#   mutate(exp_per_visit = Expenditure / Visits,
+#          exp_per_visit_pct_change = (exp_per_visit - lag(exp_per_visit)) / lag(exp_per_visit) * 100,
+#          visits_change_label = case_when(Visits > lag(Visits) ~ "Increased",
+#                                          Visits < lag(Visits) ~ "Decreased",
+#                                          Visits == lag(Visits) ~ "No Change",
+#                                          TRUE ~ "Starting Year"),
+#          exp_change_label = case_when(Expenditure > lag(Expenditure) ~ "Increased",
+#                                       Expenditure < lag(Expenditure) ~ "Decreased",
+#                                       Expenditure == lag(Expenditure) ~ "No Change",
+#                                       TRUE ~ "Starting Year"),
+#          exp_per_visit_label = case_when(exp_per_visit > lag(exp_per_visit) ~ "Increased",
+#                                          exp_per_visit < lag(exp_per_visit) ~ "Decreased",
+#                                          exp_per_visit == lag(exp_per_visit) ~ "No Change",
+#                                          TRUE ~ "Starting Year")) %>% 
+#   select(date_code, Visits, Expenditure, exp_per_visit, exp_per_visit_pct_change, 
+#          visits_change_label, exp_change_label, exp_per_visit_label) %>% 
+#   rename(year = date_code) %>% 
+#   clean_names()
+# 
+# employment_demographics_clean <- demographics %>%
+#   select(-c(feature_code, age, marital_status, gender, children, access_to_car, 
+#             social_grade, measurement, units)) %>% 
+#   filter(employment_status != "All") %>% 
+#   pivot_wider(names_from = breakdown_of_domestic_tourism, values_from = value) %>%
+#   arrange(date_code) %>% 
+#   mutate(exp_per_visit = Expenditure / Visits) %>% 
+#   select(date_code, employment_status, Visits, Expenditure, exp_per_visit) %>% 
+#   rename(year = date_code) %>% 
+#   clean_names()
+# 
+# gender_demographics_clean <- demographics %>%
+#   select(-c(feature_code, age, marital_status, children, access_to_car, 
+#             social_grade, measurement, units, employment_status)) %>% 
+#   filter(gender != "All") %>% 
+#   pivot_wider(names_from = breakdown_of_domestic_tourism, values_from = value) %>%
+#   arrange(date_code) %>% 
+#   mutate(exp_per_visit = Expenditure / Visits) %>% 
+#   select(date_code, gender, Visits, Expenditure, exp_per_visit) %>% 
+#   rename(year = date_code) %>% 
+#   clean_names()
+# 
+# age_demographics_clean <- demographics %>%
+#   select(-c(feature_code, gender, marital_status, children, access_to_car, 
+#             social_grade, measurement, units, employment_status)) %>% 
+#   filter(age != "All") %>% 
+#   pivot_wider(names_from = breakdown_of_domestic_tourism, values_from = value) %>%
+#   arrange(date_code) %>% 
+#   mutate(exp_per_visit = Expenditure / Visits) %>% 
+#   select(date_code, age, Visits, Expenditure, exp_per_visit) %>% 
+#   rename(year = date_code) %>% 
+#   clean_names()
+# 
+# marital_status_demographics_clean <- demographics %>%
+#   select(-c(feature_code, gender, age, children, access_to_car, 
+#             social_grade, measurement, units, employment_status)) %>% 
+#   filter(marital_status != "All") %>% 
+#   pivot_wider(names_from = breakdown_of_domestic_tourism, values_from = value) %>%
+#   arrange(date_code) %>% 
+#   mutate(exp_per_visit = Expenditure / Visits) %>% 
+#   select(date_code, marital_status, Visits, Expenditure, exp_per_visit) %>% 
+#   rename(year = date_code) %>% 
+#   clean_names()
+# 
+# children_demographics_clean <- demographics %>%
+#   select(-c(feature_code, gender, age, marital_status, access_to_car, 
+#             social_grade, measurement, units, employment_status)) %>% 
+#   filter(children != "All") %>% 
+#   pivot_wider(names_from = breakdown_of_domestic_tourism, values_from = value) %>%
+#   arrange(date_code) %>% 
+#   mutate(exp_per_visit = Expenditure / Visits) %>% 
+#   select(date_code, children, Visits, Expenditure, exp_per_visit) %>% 
+#   rename(year = date_code) %>% 
+#   clean_names()
+# 
+# car_demographics_clean <- demographics %>%
+#   select(-c(feature_code, gender, age, marital_status, children, 
+#             social_grade, measurement, units, employment_status)) %>% 
+#   filter(access_to_car != "All") %>% 
+#   pivot_wider(names_from = breakdown_of_domestic_tourism, values_from = value) %>%
+#   arrange(date_code) %>% 
+#   mutate(exp_per_visit = Expenditure / Visits) %>% 
+#   select(date_code, access_to_car, Visits, Expenditure, exp_per_visit) %>% 
+#   rename(year = date_code) %>% 
+#   clean_names()
+# 
+# social_demographics_clean <- demographics %>%
+#   select(-c(feature_code, gender, age, marital_status, children, 
+#             access_to_car, measurement, units, employment_status)) %>% 
+#   filter(social_grade != "All") %>% 
+#   pivot_wider(names_from = breakdown_of_domestic_tourism, values_from = value) %>%
+#   arrange(date_code, social_grade) %>% 
+#   mutate(exp_per_visit = Expenditure / Visits) %>% 
+#   select(date_code, social_grade, Visits, Expenditure, exp_per_visit) %>% 
+#   rename(year = date_code) %>% 
+#   clean_names()
+```
+
+
+```{r}
+tourism_businesses %>%
+  filter(local_authority != "Scotland",
+         year %in% c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019)) %>%
+  group_by(local_authority) %>% 
+  summarise(mean_gva = mean(gva),
+            total_gva = sum(gva)) %>% 
+  arrange(desc(mean_gva))
+  
+```
+
+```{r}
+tourism_businesses %>%
+  filter(local_authority == "Scotland",
+         year %in% c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019)) %>%
+  group_by(local_authority) %>% 
+  summarise(mean_gva = mean(gva),
+            total_gva = sum(gva))
+```
+
+
 
 ```{r}
 regional_domestic_tourism %>%
