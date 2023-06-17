@@ -60,32 +60,6 @@ regional_domestic_tourism_all %>%
 
 ```
 
-### Annual Average Boxplots
-
-```{r}
-regional_domestic_tourism_all %>% 
-  ggplot(aes(x = visits, y = region_of_residence)) +
-  geom_boxplot(fill = "#540453", alpha = 0.5) +
-  stat_summary(fun.y = mean, geom = "point", shape = 4, size = 5, color = "#1d1d65", fill="#1d1d65") +
-  labs(
-    title = "Distribution of Annual Number of Domestic Vistors",
-    x = "Visits (Thousands)",
-    y = "Region of Residence",
-    subtitle = "3 Year Averages")
-```
-
-```{r}
-regional_domestic_tourism_all %>% 
-  ggplot(aes(x = expenditure, y = region_of_residence)) +
-  geom_boxplot(fill = "#1d1d65", alpha = 0.5) +
-  stat_summary(fun.y = mean, geom = "point", shape = 4, size = 5, color="#540453", fill="#540453") +
-  labs(
-    title = "Distribution of Average Annual Expenditure of Domestic Vistors",
-    x = "Expenditure (Million GBP)",
-    y = "Region of Residence",
-    subtitle = "3 Year Averages")
-```
-
 ## Trends Over Time
 
 ### Domestic Tourism / Visits
@@ -118,33 +92,6 @@ regional_domestic_tourism_all %>%
        subtitle = "3 Year Averages") +
   ylim(0, 3500)
 
-```
-### Domestic Tourism / Nights Stayed
-
-```{r}
-
-regional_domestic_tourism_all %>%
-  ggplot(aes(x = date_code, y = nights)) +
-  geom_line(group = 1, size = 1, colour = "#540453") +
-  geom_point(colour = "#970061", show.legend = FALSE, size = 4) +
-  labs(x = "\n Year Range",
-       y = "Nights (Thousands) \n",
-       title = "Average Annual Nights Stayed by Domestic Vistors",
-       subtitle = "3 Year Average")
-
-```
-
-### Domestic Tourism / Expenditure per Visit
-
-```{r}
-regional_domestic_tourism_all %>%
-  ggplot(aes(x = date_code, y = exp_per_visit)) +
-  geom_line(group = 1, size = 1, colour = "#540453") +
-  geom_point(colour = "#970061", show.legend = FALSE, size = 4) +
-  labs(x = "\n Year Range",
-       y = "3x Year Average Expenditure per Visit (Thousands) \n",
-       title = "Average Expenditure Per Visit Domestic Vistors",
-       subtitle = "3 Year Average")
 ```
 
 ## Domestic Tourism
@@ -272,6 +219,35 @@ regional_data_joined %>%
         axis.title.y = element_blank())
   
 ```
+
+#### Gross Value Added
+
+```{r}
+tourism_businesses %>%
+  filter(local_authority != "Scotland",
+         year %in% c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019)) %>%
+  group_by(local_authority) %>% 
+  summarise(total_gva = sum(gva)) %>% 
+  slice_max(total_gva, n = 5)
+  
+tourism_businesses %>%
+  filter(local_authority %in% c("City of Edinburgh", "Glasgow City", "Aberdeen City",
+                                "Highland", "Fife"),
+         year %in% c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019)) %>%
+  ggplot() +
+  geom_boxplot(aes(x = gva, y = local_authority, fill = local_authority), 
+               alpha = 0.8,
+               show.legend = FALSE) +
+  scale_fill_manual(values = c("#540453", "#970061", "#1d1d65", "#b6cb2b", "#9fd6f3")) +
+  scale_colour_manual(values = c("#540453", "#970061", "#1d1d65", "#b6cb2b", "#9fd6f3")) +
+  labs(
+    x = "Gross Value Added (Million GBP)",
+    y = "Local Authority",
+    title = "Distribution of Annual Gross Value Added",
+    subtitle = "Top 5 Regions: 2009-2019"
+  )
+```
+
 
 #### Marketing Edinburgh to Domestic Tourists: Mini Case Study
 
