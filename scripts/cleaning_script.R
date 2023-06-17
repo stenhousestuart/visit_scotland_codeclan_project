@@ -4,7 +4,6 @@
 library(tidyverse)
 library(janitor)
 library(here)
-library(readxl)
 
 # Read In Raw Data ------------------------------------------------------------
 
@@ -41,15 +40,14 @@ regional_domestic_tourism_all_clean <- regional_domestic_tourism %>%
   clean_names() %>% 
   mutate(exp_per_visit = expenditure / visits,
          exp_per_visit_pct_change = (exp_per_visit - lag(exp_per_visit)) / lag(exp_per_visit) * 100,
-         nights_change_label = case_when(nights > lag(nights) ~ "Increased",
-                                         nights < lag(nights) ~ "Decreased",
-                                         nights == lag(nights) ~ "No Change",
-                                         TRUE ~ "Starting Year"),
+         visit_pct_change = (visits - lag(visits)) / lag(visits) * 100,
+         exp_pct_change = (expenditure - lag(expenditure)) / lag(expenditure) * 100,
+  
          visits_change_label = case_when(visits > lag(visits) ~ "Increased",
                                          visits < lag(visits) ~ "Decreased",
                                          visits == lag(visits) ~ "No Change",
                                          TRUE ~ "Starting Year"),
-         exp_change_label = case_when(expenditure > lag(expenditure) ~ "Increased",
+         exp_pct_change_label = case_when(expenditure > lag(expenditure) ~ "Increased",
                                       expenditure < lag(expenditure) ~ "Decreased",
                                       expenditure == lag(expenditure) ~ "No Change",
                                       TRUE ~ "Starting Year"),
@@ -57,7 +55,6 @@ regional_domestic_tourism_all_clean <- regional_domestic_tourism %>%
                                          exp_per_visit < lag(exp_per_visit) ~ "Decreased",
                                          exp_per_visit == lag(exp_per_visit) ~ "No Change",
                                          TRUE ~ "Starting Year"))
-
 
 regional_domestic_tourism_individual_clean <- regional_domestic_tourism %>%
   filter(feature_code != "S92000003",

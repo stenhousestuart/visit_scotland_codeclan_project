@@ -1,9 +1,11 @@
 ---
-title: "Visit Scotland Notebook"
+title: "Visit Scotland Analysis"
 output: html_notebook
 ---
 
-## Load Libraries
+## Setup
+
+### Load Libraries
 
 ```{r}
 library(tidyverse)
@@ -15,15 +17,10 @@ library(modelr)
 library(skimr)
 ```
 
-## Run Cleaning Script
+### Run Cleaning Script & Read In Clean Data
 
 ```{r}
 source(here("scripts/cleaning_script.R"))
-```
-
-## Read In Clean Data
-
-```{r}
 
 regional_domestic_tourism_all <- read_csv(here("data/clean_data/regional_domestic_tourism_all_clean.csv"))
 regional_domestic_tourism_individual <- read_csv(here("data/clean_data/regional_domestic_tourism_individual_clean.csv"))
@@ -31,7 +28,12 @@ regional_domestic_tourism_non_gb_clean <- read_csv(here("data/clean_data/regiona
 international_visits <- read_csv(here("data/clean_data/international_visits_clean.csv"))
 tourism_businesses <- read_csv(here("data/clean_data/tourism_businesses_clean.csv"))
 local_authority_geo <- st_read(dsn = "data/geo_data/", layer = "pub_las")
+```
 
+### Set Colour Scheme for Visualisations
+
+```{r}
+colour_scheme <- c("#540453", "#1d1d65", "#970061", "#b6cb2b", "#9fd6f3")
 ```
 
 ## Annual Average Stats
@@ -68,13 +70,18 @@ regional_domestic_tourism_all %>%
 
 regional_domestic_tourism_all %>%
   ggplot(aes(x = date_code, y = visits)) +
-  geom_line(group = 1, size = 1, colour = "#540453") +
-  geom_point(colour = "#970061", show.legend = FALSE, size = 4) +
+  geom_line(group = 1, size = 2, colour = colour_scheme[1]) +
+  geom_point(colour = colour_scheme[3], show.legend = FALSE, size = 4) +
   labs(x = "\n Year Range",
        y = "Visitors (Thousands) \n",
        title = "Average Annual Number of Domestic Vistors",
        subtitle = "3 Year Averages") +
-  ylim(0, 13000)
+  ylim(0, 13000) +
+  theme(plot.title = element_text(size = 15, face = "bold"),
+        plot.subtitle = element_text(size = 10),
+        panel.background = element_rect(fill = "white"),
+        panel.grid = element_line(colour = "grey90", 
+                                  linetype = "dashed"))
 
 ```
 
@@ -84,13 +91,18 @@ regional_domestic_tourism_all %>%
 
 regional_domestic_tourism_all %>%
   ggplot(aes(x = date_code, y = expenditure)) +
-  geom_line(group = 1, size = 1, colour = "#540453") +
-  geom_point(colour = "#970061", show.legend = FALSE, size = 4) +
+  geom_line(group = 1, size = 2, colour = colour_scheme[1]) +
+  geom_point(colour = colour_scheme[3], show.legend = FALSE, size = 4) +
   labs(x = "\n Year Range",
        y = "Expenditure (Million GBP) \n",
        title = "Average Annual Expenditure of Domestic Vistors",
        subtitle = "3 Year Averages") +
-  ylim(0, 3500)
+  ylim(0, 3500) +
+  theme(plot.title = element_text(size = 15, face = "bold"),
+        plot.subtitle = element_text(size = 10),
+        panel.background = element_rect(fill = "white"),
+        panel.grid = element_line(colour = "grey90", 
+                                  linetype = "dashed"))
 
 ```
 
@@ -160,14 +172,17 @@ regional_domestic_tourism_individual %>%
   geom_col(aes(x = reorder(local_authority, mean_exp_per_visit), y = mean_exp_per_visit,
                fill = local_authority %in% c("City of Edinburgh", "Glasgow City", "Highland")),
            show.legend = FALSE, colour = "white") +
-  scale_fill_manual(values = c("FALSE" = "grey60",
-                               "TRUE" = "#540453")) +
+  scale_fill_manual(values = c("FALSE" = "grey80",
+                               "TRUE" = colour_scheme[1])) +
   coord_flip() +
   labs(
     x = "Region",
     y = "Mean Expenditure per Visit (Million GBP / Thousand Visits)",
-    title = "Domestic Tourism Mean Expenditure per Visit",
-    subtitle = "By Region")
+    title = "Domestic Tourism Mean Expenditure per Visit") +
+  theme(plot.title = element_text(size = 15, face = "bold"),
+        plot.subtitle = element_text(size = 10),
+        panel.background = element_rect(fill = "white"),
+        panel.grid = element_line(colour = "grey90", linetype = "blank"))
 ```
 
 #### Nights Stayed
@@ -184,14 +199,17 @@ regional_domestic_tourism_individual %>%
                fill = local_authority %in% c("Shetland Islands", "Orkney Islands", "Na h-Eileanan Siar",
                                              "City of Edinburgh", "Glasgow City")),
            show.legend = FALSE, colour = "white") +
-  scale_fill_manual(values = c("FALSE" = "grey60",
-                               "TRUE" = "#540453")) +
+  scale_fill_manual(values = c("FALSE" = "grey80",
+                               "TRUE" = colour_scheme[1])) +
   coord_flip() +
   labs(
     x = "Region",
     y = "Avg. Nights per Visit",
-    title = "Domestic Tourism Avg. Nights per Visit",
-    subtitle = "By Region")
+    title = "Domestic Tourism Avg. Nights per Visit") +
+  theme(plot.title = element_text(size = 15, face = "bold"),
+        plot.subtitle = element_text(size = 10),
+        panel.background = element_rect(fill = "white"),
+        panel.grid = element_line(colour = "grey90", linetype = "blank"))
 ```
 
 ##### Map
@@ -207,7 +225,6 @@ regional_data_joined %>%
     x = "Longitude",
     y = "Latitude",
     title = "Domestic Tourism Mean Nights per Visit",
-    subtitle = "By Region",
     fill = "Mean Nights per Visit"
   ) +
   theme(panel.background = element_rect(fill = "white"),
@@ -216,7 +233,8 @@ regional_data_joined %>%
         axis.ticks = element_blank(),
         rect = element_blank(),
         axis.title.x = element_blank(),
-        axis.title.y = element_blank())
+        axis.title.y = element_blank(),
+        plot.title = element_text(size = 15, face = "bold"))
   
 ```
 
@@ -238,14 +256,19 @@ tourism_businesses %>%
   geom_boxplot(aes(x = gva, y = local_authority, fill = local_authority), 
                alpha = 0.8,
                show.legend = FALSE) +
-  scale_fill_manual(values = c("#540453", "#970061", "#1d1d65", "#b6cb2b", "#9fd6f3")) +
-  scale_colour_manual(values = c("#540453", "#970061", "#1d1d65", "#b6cb2b", "#9fd6f3")) +
+  scale_fill_manual(values = colour_scheme) +
+  scale_colour_manual(values = colour_scheme) +
   labs(
     x = "Gross Value Added (Million GBP)",
     y = "Local Authority",
     title = "Distribution of Annual Gross Value Added",
     subtitle = "Top 5 Regions: 2009-2019"
-  )
+  ) +
+  theme(plot.title = element_text(size = 15, face = "bold"),
+        plot.subtitle = element_text(size = 10),
+        panel.background = element_rect(fill = "white"),
+        panel.grid = element_line(colour = "grey90", 
+                                  linetype = "dashed"))
 ```
 
 
@@ -260,12 +283,17 @@ regional_domestic_tourism_non_gb_clean %>%
   geom_density_ridges(show.legend = FALSE, alpha = 0.5) +
   theme_ridges() +
   theme(axis.title.y = element_blank()) +
-  scale_fill_manual(values = c("FALSE" = "#1d1d65",
-                               "TRUE" = "#540453")) +
+  scale_fill_manual(values = c("FALSE" = colour_scheme[2],
+                               "TRUE" = colour_scheme[1])) +
   labs(
     title = "Distribution of Annual Visits by Country of Residence",
     subtitle = "Edinburgh",
-    x = "Visits (Thousands)")
+    x = "Visits (Thousands)") +
+  theme(plot.title = element_text(size = 15, face = "bold"),
+        plot.subtitle = element_text(size = 13),
+        panel.background = element_rect(fill = "white"),
+        panel.grid = element_line(colour = "grey90", linetype = "dashed"),
+        axis.text.y = element_text(face = "bold"))
 ```
 
 ##### Spend Per Visit by Country of Residence
@@ -278,12 +306,17 @@ regional_domestic_tourism_non_gb_clean %>%
   geom_density_ridges(show.legend = FALSE, alpha = 0.5) +
   theme_ridges() +
   theme(axis.title.y = element_blank()) +
-  scale_fill_manual(values = c("FALSE" = "#1d1d65",
-                               "TRUE" = "#540453")) +
+  scale_fill_manual(values = c("FALSE" = colour_scheme[2],
+                               "TRUE" = colour_scheme[1])) +
   labs(
     title = "Distribution of Expenditure per Visit by Country of Residence",
     subtitle = "Edinburgh",
-    x = "Expenditure per Visit (Million GBP / Thousand Visits)")
+    x = "Expenditure per Visit (Million GBP / Thousand Visits)") +
+  theme(plot.title = element_text(size = 15, face = "bold"),
+        plot.subtitle = element_text(size = 13),
+        panel.background = element_rect(fill = "white"),
+        panel.grid = element_line(colour = "grey90", linetype = "dashed"),
+        axis.text.y = element_text(face = "bold"))
 ```
 
 ##### Nights by Country of Residence
@@ -296,12 +329,17 @@ regional_domestic_tourism_non_gb_clean %>%
   geom_density_ridges(show.legend = FALSE, alpha = 0.5) +
   theme_ridges() +
   theme(axis.title.y = element_blank()) +
-  scale_fill_manual(values = c("FALSE" = "#1d1d65",
-                               "TRUE" = "#540453")) +
+  scale_fill_manual(values = c("FALSE" = colour_scheme[2],
+                               "TRUE" = colour_scheme[1])) +
   labs(
     title = "Distribution of Nights by Country of Residence",
     subtitle = "Edinburgh",
-    x = "Nights")
+    x = "Nights") +
+  theme(plot.title = element_text(size = 15, face = "bold"),
+        plot.subtitle = element_text(size = 13),
+        panel.background = element_rect(fill = "white"),
+        panel.grid = element_line(colour = "grey90", linetype = "dashed"),
+        axis.text.y = element_text(face = "bold"))
 ```
 
 
@@ -340,7 +378,7 @@ edinburgh_england %>%
   add_residuals(model_edinburgh) %>% 
   ggplot(aes(x = visits, y = expenditure)) +
   geom_point() +
-  geom_line(aes(y = pred), col = "#970061", size = 1) +
+  geom_line(aes(y = pred), col = colour_scheme[3], size = 1) +
   labs(
     x = "Visits (Thousands)",
     y = "Expenditure (Million GBP)",
@@ -409,13 +447,17 @@ international_visits %>%
                fill = country %in% c("USA")),
            show.legend = FALSE, colour = "white") +
   scale_fill_manual(values = c("FALSE" = "grey60",
-                               "TRUE" = "#540453")) +
+                               "TRUE" = colour_scheme[1])) +
   coord_flip() +
   labs(
     x = "Country",
     y = "Total Visits (Thousands)",
     title = "International Tourism: Total Visits (2002-2009)",
-    subtitle = "Top 20 (Holiday Only)")
+    subtitle = "Top 20 (Holiday Only)") +
+  theme(plot.title = element_text(size = 15, face = "bold"),
+        plot.subtitle = element_text(size = 10),
+        panel.background = element_rect(fill = "white"),
+        panel.grid = element_line(colour = "grey90", linetype = "blank"))
 ```
 
 ### Spend by Country of Residence
@@ -433,13 +475,17 @@ international_visits %>%
                fill = country %in% c("USA")),
            show.legend = FALSE, colour = "white") +
   scale_fill_manual(values = c("FALSE" = "grey60",
-                               "TRUE" = "#540453")) +
+                               "TRUE" = colour_scheme[1])) +
   coord_flip() +
   labs(
     x = "Country",
     y = "Total Spend (Million GBP)",
     title = "International Tourism: Total Spend (2002-2009)",
-    subtitle = "Top 20 (Holiday Only)")
+    subtitle = "Top 20 (Holiday Only)") +
+  theme(plot.title = element_text(size = 15, face = "bold"),
+        plot.subtitle = element_text(size = 10),
+        panel.background = element_rect(fill = "white"),
+        panel.grid = element_line(colour = "grey90", linetype = "blank"))
 ```
 
 ### Spend per Visit by Country of Residence
@@ -459,13 +505,17 @@ international_visits %>%
                fill = country %in% c("Australia", "China", "Canada")),
            show.legend = FALSE, colour = "white") +
   scale_fill_manual(values = c("FALSE" = "grey60",
-                               "TRUE" = "#540453")) +
+                               "TRUE" = colour_scheme[1])) +
   coord_flip() +
   labs(
     x = "Country",
     y = "Total Spend (Million GBP) / Visit (Thousands)",
     title = "International Tourism: Total Spend per Visit (2002-2009)",
-    subtitle = "Countries w/ Over 500 Thousand Total Visits (Holiday Only)")
+    subtitle = "Countries w/ Over 500 Thousand Total Visits (Holiday Only)") +
+  theme(plot.title = element_text(size = 15, face = "bold"),
+        plot.subtitle = element_text(size = 10),
+        panel.background = element_rect(fill = "white"),
+        panel.grid = element_line(colour = "grey90", linetype = "blank"))
 ```
 
 ### Group of High Value Countries
@@ -485,13 +535,17 @@ international_visits %>%
              show.legend = FALSE,
              size = 4) +
   scale_colour_manual(values = c("FALSE" = "grey60",
-                                 "TRUE" = "#970061")) +
+                                 "TRUE" = colour_scheme[3])) +
   ggrepel::geom_text_repel(aes(x = total_visits, y = spend_per_visit, label = country)) +
   labs(
     x = "Visits (Thousands)",
     y = "Total Spend (Million GBP) / Visit (Thousands)",
     title = "International Tourism: Visits vs. Spend Per Visit (2002-2009)",
-    subtitle = "Countries w/ Over 500 Thousand Total Visits (Holiday Only)")
+    subtitle = "Countries w/ Over 500 Thousand Total Visits (Holiday Only)") +
+  theme(plot.title = element_text(size = 15, face = "bold"),
+        plot.subtitle = element_text(size = 10),
+        panel.background = element_rect(fill = "white"),
+        panel.grid = element_line(colour = "grey90", linetype = "dashed"))
 ```
 
 ### By Region Visited
