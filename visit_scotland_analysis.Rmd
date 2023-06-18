@@ -308,6 +308,51 @@ tourism_businesses %>%
                                   linetype = "dashed"))
 ```
 
+#### Scottish Based Tourism Compared To English Based Tourism
+
+```{r}
+regional_data_joined_sco_eng %>% 
+  filter(region_of_residence == "Scotland") %>%
+  group_by(local_authority) %>%
+  summarise(mean_visits = mean(visits)) %>% 
+  ggplot(aes(fill = mean_visits)) + 
+  geom_sf(colour = "grey90", size = 0.1) +
+  labs(
+    x = "Longitude",
+    y = "Latitude",
+    title = "Average Annual Number of Scottish Based Vistors",
+    subtitle = "By Region",
+    fill = "Visits (Thousands)") +
+  theme(panel.background = element_rect(fill = "white"),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        rect = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())
+```
+
+```{r}
+regional_data_joined_sco_eng %>% 
+  filter(region_of_residence == "England") %>% 
+  group_by(local_authority) %>%
+  summarise(mean_visits = mean(visits)) %>% 
+  ggplot(aes(fill = mean_visits)) + 
+  geom_sf(colour = "grey90", size = 0.1) +
+  labs(
+    x = "Longitude",
+    y = "Latitude",
+    title = "Average Annual Number of English Based Vistors",
+    subtitle = "By Region",
+    fill = "Visits (Thousands)") +
+  theme(panel.background = element_rect(fill = "white"),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        rect = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())
+```
 
 #### Marketing Edinburgh to Domestic Tourists: Mini Case Study
 

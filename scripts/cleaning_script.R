@@ -45,7 +45,6 @@ domestic_annual_clean <- read_csv("data/raw_data/gbts_scotland_annual.csv") %>%
 
 # Join Domestic And International Tourism Summaries ------------------------------------------------------------
 
-
 dom_int_summary <- bind_rows(domestic_annual_clean, international_visits_annual_summary_clean) %>% 
   select(-nights)
 
@@ -98,6 +97,9 @@ regional_domestic_tourism_non_gb_clean <- regional_domestic_tourism %>%
   
 regional_data_joined <- local_authority_geo %>% 
   left_join(regional_domestic_tourism_individual_clean, by = c("code" = "feature_code"))
+
+regional_data_joined_sco_eng <- local_authority_geo %>% 
+  left_join(regional_domestic_tourism_non_gb_clean, by = c("code" = "feature_code"))
 
 # Write Clean Data To .CSV -----------------------------------------------------------
 
