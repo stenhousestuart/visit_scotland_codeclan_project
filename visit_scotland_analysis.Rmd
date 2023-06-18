@@ -17,7 +17,7 @@ library(modelr)
 library(skimr)
 ```
 
-### Run Cleaning Script & Read In Clean Data
+### Run Cleaning Script, Read In Clean Data & Set Colour Scheme for Visualisations
 
 ```{r}
 source(here("scripts/cleaning_script.R"))
@@ -27,56 +27,87 @@ regional_domestic_tourism_individual <- read_csv(here("data/clean_data/regional_
 regional_domestic_tourism_non_gb_clean <- read_csv(here("data/clean_data/regional_domestic_tourism_non_gb_clean.csv"))
 international_visits <- read_csv(here("data/clean_data/international_visits_clean.csv"))
 tourism_businesses <- read_csv(here("data/clean_data/tourism_businesses_clean.csv"))
+dom_int_summary <- read_csv(here("data/clean_data/dom_int_summary_clean.csv"))
+# international_visits_annual_summary <- read_csv(here("data/clean_data/international_visits_annual_summary_clean.csv"))
+# domestic_annual <- read_csv(here("data/clean_data/domestic_annual_clean.csv"))
+
 local_authority_geo <- st_read(dsn = "data/geo_data/", layer = "pub_las")
-```
 
-### Set Colour Scheme for Visualisations
-
-```{r}
 colour_scheme <- c("#540453", "#1d1d65", "#970061", "#b6cb2b", "#9fd6f3")
 ```
 
 ## Annual Average Stats
 
+### Domestic
+
 #### 5 Figure Summary
 
 ```{r}
-regional_domestic_tourism_all %>% 
+dom_int_summary %>%
+  filter(dom_int == "Domestic") %>% 
+  skim()
+```
+
+```{r}
+dom_int_summary %>%
+  filter(dom_int == "International") %>% 
   skim()
 ```
 
 #### IQR
 
 ```{r}
-regional_domestic_tourism_all %>% 
+dom_int_summary %>%
+  filter(dom_int == "Domestic") %>%  
   summarise(visits_iqr= IQR(visits),
-            expenditure_iqr= IQR(expenditure))
+            expenditure_iqr= IQR(spend))
+```
+
+```{r}
+dom_int_summary %>%
+  filter(dom_int == "International") %>%  
+  summarise(visits_iqr= IQR(visits),
+            expenditure_iqr= IQR(spend))
 ```
 
 #### Median
 
 ```{r}
-regional_domestic_tourism_all %>% 
+dom_int_summary %>%
+  filter(dom_int == "Domestic") %>%  
   summarise(median_visits = median(visits),
-            median_expenditure = median(expenditure))
+            median_spend = median(spend))
 
+```
+
+```{r}
+dom_int_summary %>%
+  filter(dom_int == "International") %>%  
+  summarise(median_visits = median(visits),
+            median_spend = median(spend))
 ```
 
 ## Trends Over Time
 
-### Domestic Tourism / Visits
+### Over Time / Visits
 
 ```{r}
 
-regional_domestic_tourism_all %>%
-  ggplot(aes(x = date_code, y = visits)) +
-  geom_line(group = 1, size = 2, colour = colour_scheme[1]) +
-  geom_point(colour = colour_scheme[3], show.legend = FALSE, size = 4) +
-  labs(x = "\n Year Range",
+dom_int_summary %>% 
+  ggplot() +
+  geom_line(aes(x = year, y = visits, colour = dom_int),
+          size = 2) +
+  geom_point(aes(x = year, y = visits, colour = dom_int), 
+             size = 4) +
+  ylim(0, 15000) +
+  labs(x = "\n Year",
        y = "Visitors (Thousands) \n",
-       title = "Average Annual Number of Domestic Vistors",
-       subtitle = "3 Year Averages") +
-  ylim(0, 13000) +
+       title = "Annual Visits",
+       subtitle = "Domestic & International Overnight Vistors",
+       colour = "") +
+  scale_x_continuous(breaks = c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019)) +
+  scale_colour_manual(values = c("Domestic" = "#540453",
+                                 "International" = "#9fd6f3")) +
   theme(plot.title = element_text(size = 15, face = "bold"),
         plot.subtitle = element_text(size = 10),
         panel.background = element_rect(fill = "white"),
@@ -85,19 +116,25 @@ regional_domestic_tourism_all %>%
 
 ```
 
-### Domestic Tourism / Expenditure
+### Over Time / Spend
 
 ```{r}
 
-regional_domestic_tourism_all %>%
-  ggplot(aes(x = date_code, y = expenditure)) +
-  geom_line(group = 1, size = 2, colour = colour_scheme[1]) +
-  geom_point(colour = colour_scheme[3], show.legend = FALSE, size = 4) +
-  labs(x = "\n Year Range",
+dom_int_summary %>% 
+  ggplot() +
+  geom_line(aes(x = year, y = spend, colour = dom_int),
+          size = 2) +
+  geom_point(aes(x = year, y = spend, colour = dom_int), 
+             size = 4) +
+  ylim(0, 4000) +
+  labs(x = "\n Year",
        y = "Expenditure (Million GBP) \n",
-       title = "Average Annual Expenditure of Domestic Vistors",
-       subtitle = "3 Year Averages") +
-  ylim(0, 3500) +
+       title = "Annual Expenditure",
+       subtitle = "Domestic & International Overnight Vistors",
+       colour = "") +
+  scale_x_continuous(breaks = c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019)) +
+  scale_colour_manual(values = c("Domestic" = "#540453",
+                                 "International" = "#9fd6f3")) +
   theme(plot.title = element_text(size = 15, face = "bold"),
         plot.subtitle = element_text(size = 10),
         panel.background = element_rect(fill = "white"),
@@ -197,7 +234,7 @@ regional_domestic_tourism_individual %>%
   ggplot() +
   geom_col(aes(x = reorder(local_authority, mean_nights_per_visit), y = mean_nights_per_visit,
                fill = local_authority %in% c("Shetland Islands", "Orkney Islands", "Na h-Eileanan Siar",
-                                             "City of Edinburgh", "Glasgow City")),
+                                             "City of Edinburgh", "Glasgow City", "Highland")),
            show.legend = FALSE, colour = "white") +
   scale_fill_manual(values = c("FALSE" = "grey80",
                                "TRUE" = colour_scheme[1])) +
@@ -416,23 +453,7 @@ expenditure = ~632 (Low Estimate ~620, High Estimate ~644)
 
 ## International Tourism
 
-### Annual Average Stats
-
-#### Mean
-
-```{r}
-international_visits %>%
-  filter(year %in% c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019)) %>% 
-  group_by(year) %>% 
-  summarise(sum_annual_visits = sum(visits),
-            sum_annual_spend = sum(spend)) %>%
-  summarise(mean_annual_visits = mean(sum_annual_visits),
-            mean_annual_spend = mean(sum_annual_spend))
-```
-
-### Expenditure Stats
-
-### Visitors by Country of Residence
+### Total Visitors by Country of Residence
 
 ```{r}
 international_visits %>% 
@@ -449,6 +470,7 @@ international_visits %>%
   scale_fill_manual(values = c("FALSE" = "grey60",
                                "TRUE" = colour_scheme[1])) +
   coord_flip() +
+  ylim(0, 3200) +
   labs(
     x = "Country",
     y = "Total Visits (Thousands)",
@@ -460,7 +482,7 @@ international_visits %>%
         panel.grid = element_line(colour = "grey90", linetype = "blank"))
 ```
 
-### Spend by Country of Residence
+### Total Spend by Country of Residence
 
 ```{r}
 international_visits %>% 
@@ -490,6 +512,8 @@ international_visits %>%
 
 ### Spend per Visit by Country of Residence
 
+#### Bar Plot
+
 ```{r}
 international_visits %>% 
   select(-c(quarter, age, sample)) %>%
@@ -518,7 +542,7 @@ international_visits %>%
         panel.grid = element_line(colour = "grey90", linetype = "blank"))
 ```
 
-### Group of High Value Countries
+#### Scatter Plot
 
 ```{r}
 international_visits %>% 
@@ -548,12 +572,10 @@ international_visits %>%
         panel.grid = element_line(colour = "grey90", linetype = "dashed"))
 ```
 
-### By Region Visited
+### Marketing Scotland To Canadian Based Tourists
 
-"Information at the regional level is often based on very small sample sizes"  
-"The International Passenger Survey is a national survey, and is not designed to be statistically robust at the regional level."
-
-### By Season
+$H_0$: $\mu_{\textrm{spend per visit(Q1+Q4)}} - \mu_{\textrm{spend per visit(Q2+Q3)}} = 0$
+$H_a$: $\mu_{\textrm{spend per visit(Q1+Q4)}} - \mu_{\textrm{spend per visit(Q2+Q3)}} != 0$
 
 ```{r}
 international_visits %>%

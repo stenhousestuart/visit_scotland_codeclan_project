@@ -29,6 +29,26 @@ tourism_businesses_clean <- tourism_businesses %>%
 international_visits_clean <- international_visits %>%
   clean_names()
 
+international_visits_annual_summary_clean <- international_visits_clean %>%
+  filter(year %in% c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019)) %>%
+  group_by(year) %>%
+  summarise(visits = sum(visits),
+            spend = sum(spend),
+            nights = sum(nights)) %>% 
+  mutate(dom_int = "International")
+
+
+# Clean Domestic Tourism Data ------------------------------------------------------------
+
+domestic_annual_clean <- read_csv("data/raw_data/gbts_scotland_annual.csv") %>% 
+  mutate(dom_int = "Domestic", .after = year)
+
+# Join Domestic And International Tourism Summaries ------------------------------------------------------------
+
+
+dom_int_summary <- bind_rows(domestic_annual_clean, international_visits_annual_summary_clean) %>% 
+  select(-nights)
+
 # Clean Regional Domestic Tourism Data ------------------------------------------------------------
 
 regional_domestic_tourism_all_clean <- regional_domestic_tourism %>%
@@ -86,6 +106,9 @@ write_csv(regional_domestic_tourism_individual_clean, here("data/clean_data/regi
 write_csv(regional_domestic_tourism_non_gb_clean, here("data/clean_data/regional_domestic_tourism_non_gb_clean.csv"))
 write_csv(international_visits_clean, here("data/clean_data/international_visits_clean.csv"))
 write_csv(tourism_businesses_clean, here("data/clean_data/tourism_businesses_clean.csv"))
+write_csv(dom_int_summary, here("data/clean_data/dom_int_summary_clean.csv"))
+# write_csv(domestic_annual_clean, here("data/clean_data/domestic_annual_clean.csv"))
+# write_csv(international_visits_annual_summary_clean, here("data/clean_data/international_visits_annual_summary_clean.csv"))
 
 # Remove Objects from Environment -----------------------------------------------------------
 
@@ -99,3 +122,6 @@ rm(international_visits)
 rm(local_authority_geo)
 rm(tourism_businesses)
 rm(tourism_businesses_clean)
+rm(domestic_annual_clean)
+rm(international_visits_annual_summary_clean)
+rm(dom_int_summary_clean)
