@@ -49,12 +49,13 @@ TBC
 ## Key Skills / Technologies Used
 
 **Skills**
-- Data Wrangling
-- Data Cleaning
 - Exploratory Data Analysis
 - Data Visualisation
+- Geospatial Visualisation
 - Linear Regression Modelling
 - Hypothesis Testing
+- Data Wrangling
+- Data Cleaning
 
 **Languages**
 - R
