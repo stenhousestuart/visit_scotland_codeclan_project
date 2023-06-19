@@ -14,11 +14,12 @@ local_authority_codes <- read_csv("data/raw_data/local_authority_codes.csv")
 
 international_visits <- read_csv("data/raw_data/international-passenger-survey-scotland-2019.csv")
 
+tourism_businesses <- read_csv(here("data/raw_data/tourism-businesses-in-scotland.csv")) %>% 
+  clean_names()
+
 local_authority_geo <- st_read(dsn = "data/geo_data/", layer = "pub_las")
 
-tourism_businesses <- read_csv(here("data/raw_data/tourism-businesses-in-scotland.csv")) %>% clean_names()
-
-# Domestic Tourism Data ------------------------------------------------------------
+# National Domestic Tourism Data ------------------------------------------------------------
 
 domestic_annual_clean <- read_csv("data/raw_data/gbts_scotland_annual.csv") %>% 
   mutate(dom_int = "Domestic", .after = year)

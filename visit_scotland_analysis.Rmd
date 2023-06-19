@@ -440,7 +440,6 @@ regional_domestic_tourism_non_gb_clean %>%
 
 ##### Linear Model: Predict Spend by Visits
 
-
 ```{r}
 regional_domestic_tourism_non_gb_clean %>% 
   filter(local_authority == "City of Edinburgh",
