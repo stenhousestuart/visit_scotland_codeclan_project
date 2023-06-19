@@ -18,62 +18,12 @@ local_authority_geo <- st_read(dsn = "data/geo_data/", layer = "pub_las")
 
 tourism_businesses <- read_csv(here("data/raw_data/tourism-businesses-in-scotland.csv")) %>% clean_names()
 
-# Clean Tourism Business Data ------------------------------------------------------------
-
-tourism_businesses_clean <- tourism_businesses %>%
-  clean_names() %>% 
-  select(-x7)
-
-# Clean International Tourism Data ------------------------------------------------------------
-
-international_visits_clean <- international_visits %>%
-  clean_names()
-
-international_visits_annual_summary_clean <- international_visits_clean %>%
-  filter(year %in% c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019)) %>%
-  group_by(year) %>%
-  summarise(visits = sum(visits),
-            spend = sum(spend),
-            nights = sum(nights)) %>% 
-  mutate(dom_int = "International")
-
-
-# Clean Domestic Tourism Data ------------------------------------------------------------
+# Domestic Tourism Data ------------------------------------------------------------
 
 domestic_annual_clean <- read_csv("data/raw_data/gbts_scotland_annual.csv") %>% 
   mutate(dom_int = "Domestic", .after = year)
 
-# Join Domestic And International Tourism Summaries ------------------------------------------------------------
-
-dom_int_summary <- bind_rows(domestic_annual_clean, international_visits_annual_summary_clean) %>% 
-  select(-nights)
-
-# Clean Regional Domestic Tourism Data ------------------------------------------------------------
-
-regional_domestic_tourism_all_clean <- regional_domestic_tourism %>%
-  filter(feature_code == "S92000003",
-         region_of_residence == "All of GB") %>%
-  arrange(date_code) %>% 
-  select(-c(measurement, units)) %>% 
-  pivot_wider(names_from = breakdown_of_domestic_tourism, values_from = value) %>% 
-  clean_names() %>% 
-  mutate(exp_per_visit = expenditure / visits,
-         exp_per_visit_pct_change = (exp_per_visit - lag(exp_per_visit)) / lag(exp_per_visit) * 100,
-         visit_pct_change = (visits - lag(visits)) / lag(visits) * 100,
-         exp_pct_change = (expenditure - lag(expenditure)) / lag(expenditure) * 100,
-  
-         visits_change_label = case_when(visits > lag(visits) ~ "Increased",
-                                         visits < lag(visits) ~ "Decreased",
-                                         visits == lag(visits) ~ "No Change",
-                                         TRUE ~ "Starting Year"),
-         exp_pct_change_label = case_when(expenditure > lag(expenditure) ~ "Increased",
-                                      expenditure < lag(expenditure) ~ "Decreased",
-                                      expenditure == lag(expenditure) ~ "No Change",
-                                      TRUE ~ "Starting Year"),
-         exp_per_visit_label = case_when(exp_per_visit > lag(exp_per_visit) ~ "Increased",
-                                         exp_per_visit < lag(exp_per_visit) ~ "Decreased",
-                                         exp_per_visit == lag(exp_per_visit) ~ "No Change",
-                                         TRUE ~ "Starting Year"))
+## Regional Domestic Tourism Data ------------------------------------------------------------
 
 regional_domestic_tourism_individual_clean <- regional_domestic_tourism %>%
   filter(feature_code != "S92000003",
@@ -94,28 +44,48 @@ regional_domestic_tourism_non_gb_clean <- regional_domestic_tourism %>%
   clean_names() %>%
   rename(year = date_code) %>% 
   inner_join(local_authority_codes, by = "feature_code")
-  
+
 regional_data_joined <- local_authority_geo %>% 
   left_join(regional_domestic_tourism_individual_clean, by = c("code" = "feature_code"))
 
 regional_data_joined_sco_eng <- local_authority_geo %>% 
   left_join(regional_domestic_tourism_non_gb_clean, by = c("code" = "feature_code"))
 
+# International Tourism Data ------------------------------------------------------------
+
+international_visits_clean <- international_visits %>%
+  clean_names()
+
+international_visits_annual_summary_clean <- international_visits_clean %>%
+  filter(year %in% c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019)) %>%
+  group_by(year) %>%
+  summarise(visits = sum(visits),
+            spend = sum(spend),
+            nights = sum(nights)) %>% 
+  mutate(dom_int = "International")
+
+# Join Domestic And International Tourism Data ------------------------------------------------------------
+
+dom_int_summary <- bind_rows(domestic_annual_clean, international_visits_annual_summary_clean) %>% 
+  select(-nights)
+
+# Tourism Business Data ------------------------------------------------------------
+
+tourism_businesses_clean <- tourism_businesses %>%
+  clean_names() %>% 
+  select(-x7)
+
 # Write Clean Data To .CSV -----------------------------------------------------------
 
-write_csv(regional_domestic_tourism_all_clean, here("data/clean_data/regional_domestic_tourism_all_clean.csv"))
 write_csv(regional_domestic_tourism_individual_clean, here("data/clean_data/regional_domestic_tourism_individual_clean.csv"))
 write_csv(regional_domestic_tourism_non_gb_clean, here("data/clean_data/regional_domestic_tourism_non_gb_clean.csv"))
 write_csv(international_visits_clean, here("data/clean_data/international_visits_clean.csv"))
 write_csv(tourism_businesses_clean, here("data/clean_data/tourism_businesses_clean.csv"))
 write_csv(dom_int_summary, here("data/clean_data/dom_int_summary_clean.csv"))
-# write_csv(domestic_annual_clean, here("data/clean_data/domestic_annual_clean.csv"))
-# write_csv(international_visits_annual_summary_clean, here("data/clean_data/international_visits_annual_summary_clean.csv"))
 
 # Remove Objects from Environment -----------------------------------------------------------
 
 rm(regional_domestic_tourism)
-rm(regional_domestic_tourism_all_clean)
 rm(regional_domestic_tourism_individual_clean)
 rm(regional_domestic_tourism_non_gb_clean)
 rm(local_authority_codes)

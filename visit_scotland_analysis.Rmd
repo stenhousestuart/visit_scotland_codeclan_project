@@ -15,6 +15,7 @@ library(infer)
 library(ggridges)
 library(modelr)
 library(skimr)
+library(ggfortify)
 ```
 
 ### Run Cleaning Script, Read In Clean Data & Set Colour Scheme for Visualisations
@@ -22,14 +23,11 @@ library(skimr)
 ```{r}
 source(here("scripts/cleaning_script.R"))
 
-regional_domestic_tourism_all <- read_csv(here("data/clean_data/regional_domestic_tourism_all_clean.csv"))
 regional_domestic_tourism_individual <- read_csv(here("data/clean_data/regional_domestic_tourism_individual_clean.csv"))
 regional_domestic_tourism_non_gb_clean <- read_csv(here("data/clean_data/regional_domestic_tourism_non_gb_clean.csv"))
 international_visits <- read_csv(here("data/clean_data/international_visits_clean.csv"))
 tourism_businesses <- read_csv(here("data/clean_data/tourism_businesses_clean.csv"))
 dom_int_summary <- read_csv(here("data/clean_data/dom_int_summary_clean.csv"))
-# international_visits_annual_summary <- read_csv(here("data/clean_data/international_visits_annual_summary_clean.csv"))
-# domestic_annual <- read_csv(here("data/clean_data/domestic_annual_clean.csv"))
 
 local_authority_geo <- st_read(dsn = "data/geo_data/", layer = "pub_las")
 
@@ -425,7 +423,7 @@ regional_domestic_tourism_non_gb_clean %>%
 ```
 
 
-##### Linear Model: Predict Spend by Visits & Nights?
+##### Linear Model: Predict Spend by Visits
 
 
 ```{r}
@@ -436,23 +434,23 @@ regional_domestic_tourism_non_gb_clean %>%
 ```
 
 ```{r}
-regional_domestic_tourism_non_gb_clean %>% 
-  filter(local_authority == "City of Edinburgh",
-         region_of_residence == "England") %>% 
-  summarise(cor(expenditure, nights))
-```
-
-```{r}
 edinburgh_england <- regional_domestic_tourism_non_gb_clean %>% 
   filter(local_authority == "City of Edinburgh",
          region_of_residence == "England")
 ```
 
-
 ```{r}
 model_edinburgh <- lm(formula = expenditure ~ visits, data = edinburgh_england)
 summary(model_edinburgh)
 ```
+
+```{r}
+autoplot(model_edinburgh)
+```
+
+- Residuals vs. Fitted (Tests Independence of Residuals): No strong evidence of a pattern. 
+- Normal Q-Q (Tests Normality of Residuals): Distribution of standardised residuals appears fairly normal. 
+- Scale-Location (Tests Constancy of Variation of Residuals): No strong evidence of funneling.
 
 ```{r}
 edinburgh_england %>%
