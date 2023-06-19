@@ -146,6 +146,13 @@ dom_int_summary %>%
 #### Average Visits By Region
 
 ```{r}
+regional_data_joined %>% 
+  group_by(local_authority) %>% 
+  summarise(mean_visits = mean(visits)) %>% 
+  arrange(desc(mean_visits))
+```
+
+```{r}
 
 regional_data_joined %>% 
   group_by(code) %>% 
@@ -169,6 +176,14 @@ regional_data_joined %>%
 ```
 
 #### Expenditure by Region
+
+```{r}
+regional_data_joined %>% 
+  group_by(local_authority) %>% 
+  summarise(mean_expenditure = mean(expenditure)) %>% 
+  arrange(desc(mean_expenditure))
+```
+
 
 ```{r}
 regional_data_joined %>% 
@@ -336,7 +351,7 @@ regional_data_joined_sco_eng %>%
   group_by(local_authority) %>%
   summarise(mean_visits = mean(visits)) %>% 
   ggplot(aes(fill = mean_visits)) + 
-  geom_sf(colour = "grey90", size = 0.1) +
+  geom_sf(colour = "grey90", size = 0.5) +
   labs(
     x = "Longitude",
     y = "Latitude",
