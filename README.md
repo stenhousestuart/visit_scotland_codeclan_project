@@ -4,7 +4,7 @@ editor_options:
     wrap: 72
 ---
 
-![](readme_header_image.png)
+![](readme_header.png)
 
 # Visit Scotland Project
 
