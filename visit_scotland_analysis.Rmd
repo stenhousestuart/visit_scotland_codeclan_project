@@ -114,7 +114,7 @@ dom_int_summary %>%
 
 ```
 
-### Over Time / Spend
+### Over Time / Expenditure
 
 ```{r}
 
@@ -206,9 +206,9 @@ regional_data_joined %>%
         axis.title.y = element_blank())
 ```
 
-#### Spend Per Visit
+#### Expenditure Per Visit
 
-##### Mean Spend Per Visit Plot
+##### Mean Expenditure Per Visit Plot
 
 ```{r}
 regional_domestic_tourism_individual %>%
@@ -391,7 +391,7 @@ regional_domestic_tourism_non_gb_clean %>%
         axis.text.y = element_text(face = "bold"))
 ```
 
-##### Spend Per Visit by Country of Residence
+##### Expenditure Per Visit by Country of Residence
 
 ```{r}
 regional_domestic_tourism_non_gb_clean %>%
@@ -438,7 +438,7 @@ regional_domestic_tourism_non_gb_clean %>%
 ```
 
 
-##### Linear Model: Predict Spend by Visits
+##### Linear Model: Predict Expenditure by Visits
 
 ```{r}
 regional_domestic_tourism_non_gb_clean %>% 
@@ -539,7 +539,7 @@ international_visits %>%
         panel.grid = element_line(colour = "grey90", linetype = "blank"))
 ```
 
-### Total Spend by Country of Residence
+### Total Expenditure by Country of Residence
 
 ```{r}
 international_visits %>% 
@@ -558,8 +558,8 @@ international_visits %>%
   coord_flip() +
   labs(
     x = "Country",
-    y = "Total Spend (Million GBP)",
-    title = "International Tourism: Total Spend (2002-2009)",
+    y = "Total Expenditure (Million GBP)",
+    title = "International Tourism: Total Expenditure (2002-2009)",
     subtitle = "Top 20 (Holiday Only)") +
   theme(plot.title = element_text(size = 15, face = "bold"),
         plot.subtitle = element_text(size = 10),
@@ -567,7 +567,7 @@ international_visits %>%
         panel.grid = element_line(colour = "grey90", linetype = "blank"))
 ```
 
-### Spend per Visit by Country of Residence
+### Expenditure per Visit by Country of Residence
 
 #### Bar Plot
 
@@ -590,8 +590,8 @@ international_visits %>%
   coord_flip() +
   labs(
     x = "Country",
-    y = "Total Spend (Million GBP) / Visit (Thousands)",
-    title = "International Tourism: Total Spend per Visit (2002-2009)",
+    y = "Total Expenditure (Million GBP) / Total Visits (Thousands)",
+    title = "International Tourism: Total Expenditure per Visit (2002-2009)",
     subtitle = "Countries w/ Over 500 Thousand Total Visits (Holiday Only)") +
   theme(plot.title = element_text(size = 15, face = "bold"),
         plot.subtitle = element_text(size = 10),
@@ -620,8 +620,8 @@ international_visits %>%
   ggrepel::geom_text_repel(aes(x = total_visits, y = spend_per_visit, label = country)) +
   labs(
     x = "Visits (Thousands)",
-    y = "Total Spend (Million GBP) / Visit (Thousands)",
-    title = "International Tourism: Visits vs. Spend Per Visit (2002-2009)",
+    y = "Total Expenditure (Million GBP) / Total Visits (Thousands)",
+    title = "International Tourism: Visits vs. Expenditure Per Visit (2002-2009)",
     subtitle = "Countries w/ Over 500 Thousand Total Visits (Holiday Only)") +
   theme(plot.title = element_text(size = 15, face = "bold"),
         plot.subtitle = element_text(size = 10),
