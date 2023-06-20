@@ -14,7 +14,7 @@ local_authority_codes <- read_csv("data/raw_data/local_authority_codes.csv")
 
 international_visits <- read_csv("data/raw_data/international-passenger-survey-scotland-2019.csv")
 
-tourism_businesses <- read_csv(here("data/raw_data/tourism-businesses-in-scotland.csv")) %>% 
+tourism_businesses <- read_csv("data/raw_data/tourism-businesses-in-scotland.csv") %>% 
   clean_names()
 
 local_authority_geo <- st_read(dsn = "data/geo_data/", layer = "pub_las")
@@ -74,7 +74,8 @@ dom_int_summary <- bind_rows(domestic_annual_clean, international_visits_annual_
 
 tourism_businesses_clean <- tourism_businesses %>%
   clean_names() %>% 
-  select(-x7)
+  select(-x7) %>% 
+  filter(local_authority != "- Select -")
 
 # Write Clean Data To .CSV -----------------------------------------------------------
 
