@@ -101,7 +101,7 @@ dom_int_summary %>%
   labs(x = "\n Year",
        y = "Visitors (Thousands) \n",
        title = "Annual Visits",
-       subtitle = "Domestic & International Overnight Vistors",
+       subtitle = "Domestic & International Overnight Vistors (2009-2019)",
        colour = "") +
   scale_x_continuous(breaks = c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019)) +
   scale_colour_manual(values = c("Domestic" = "#540453",
@@ -128,7 +128,7 @@ dom_int_summary %>%
   labs(x = "\n Year",
        y = "Expenditure (Million GBP) \n",
        title = "Annual Expenditure",
-       subtitle = "Domestic & International Overnight Vistors",
+       subtitle = "Domestic & International Overnight Vistors (2009-2019)",
        colour = "") +
   scale_x_continuous(breaks = c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019)) +
   scale_colour_manual(values = c("Domestic" = "#540453",
@@ -639,7 +639,8 @@ international_visits %>%
   filter(country == "Canada",
          purpose == "Holiday") %>% 
   mutate(exp_per_visit = spend / visits,
-         spring_summer = if_else(quarter %in% c("Quarter 2", "Quarter 3"), "Yes", "No")) %>%  group_by(spring_summer) %>% 
+         spring_summer = if_else(quarter %in% c("Quarter 2", "Quarter 3"), "Yes", "No")) %>%  
+  group_by(spring_summer) %>% 
   summarise(mean_visits = mean(visits),
             mean_exp = mean(spend),
             mean_exp_per_visit = mean(exp_per_visit))
