@@ -1,4 +1,4 @@
-![Header](images/readme_header.png)
+![](images/readme_header.png)
 
 ## Introduction
 
@@ -27,13 +27,14 @@ identified:
 2.  Expenditure
 3.  Expenditure per Visit
 
+
 ------------------------------------------------------------------------
 
-## Ethics
+## Screenshots
 
-The data used is, to varying extents, aggregated before being made
-openly available. Individual survey responses are not made available and
-there were no ethical concerns regarding privacy and confidentiality.
+![](images/dt_by_region.png)
+
+![](images/cs_1.png)
 
 ------------------------------------------------------------------------
 
@@ -55,13 +56,9 @@ and visualisation used in the project presentation.
 
 ### Assumptions / Personal Judgements:
 
--   Due to the impact of COVID-19 on tourism and data collection and the
-    changes in methodoligies applied to collected data, I chose to
-    include data only up until and including 2019 in the analysis.
+-   Due to the impact of COVID-19 and given the limited time frame for analysis and presentation, I decided to narrow my focus to data up until and including 2019.
 
--   Taking into consideration allocated preparation and presentation
-    time, I have also chosen to focus on overnight tourism only and the
-    analysis does not consider day visits.
+-   In light of the limited time frame for analysis and presentation, I narrowed my focus to data about overnight visits for this project.
 
 ------------------------------------------------------------------------
 
@@ -131,3 +128,9 @@ Insights identified that Canada had a relatively low number of visits to Scotlan
 -   GitHub
 
 ------------------------------------------------------------------------
+
+## Ethics
+
+The data used is, to varying extents, aggregated before being made
+openly available. Individual survey responses are not made available and
+there were no ethical concerns regarding privacy and confidentiality.
