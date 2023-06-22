@@ -4,6 +4,8 @@
 
 ![](images/readme_header.png)
 
+------------------------------------------------------------------------
+
 ## Introduction
 
 This project was completed over 10 days in June 2023 as part of the
