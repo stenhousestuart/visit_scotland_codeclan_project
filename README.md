@@ -1,3 +1,7 @@
+# Visit Scotland CodeClan Project: End-to-End Analysis
+ 
+------------------------------------------------------------------------
+
 ![](images/readme_header.png)
 
 ## Introduction
