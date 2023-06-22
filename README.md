@@ -1,6 +1,4 @@
-# Visit Scotland Project
-
-------------------------------------------------------------------------
+![](images/readme_header.png)
 
 ## Introduction
 
