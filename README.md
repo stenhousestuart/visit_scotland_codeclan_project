@@ -1,4 +1,4 @@
-![](images/readme_header.png)
+![Header](images/readme_header.png)
 
 ## Introduction
 
