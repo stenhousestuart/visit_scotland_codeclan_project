@@ -34,9 +34,7 @@ identified:
 
 ## Screenshots
 
-*Full Presentation Available*
-
-[FULL PRESENTATION](https://github.com/stenhousestuart/visit_scotland_codeclan_project/blob/main/presentation.pdf)
+[LINK TO FULL PRESENTATION](https://github.com/stenhousestuart/visit_scotland_codeclan_project/blob/main/presentation.pdf)
 
 ![](images/annual_visits_by_region.png)
 
