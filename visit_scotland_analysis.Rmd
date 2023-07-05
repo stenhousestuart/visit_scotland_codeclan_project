@@ -158,7 +158,7 @@ regional_data_joined %>%
   group_by(code) %>% 
   summarise(mean_visits = mean(visits)) %>% 
   ggplot(aes(fill = mean_visits)) + 
-  geom_sf(colour = "grey90", size = 0.1) +
+  geom_sf(colour = "white", linewidth = 0.04) +
   labs(
     x = "Longitude",
     y = "Latitude",
@@ -190,7 +190,7 @@ regional_data_joined %>%
   group_by(code) %>% 
   summarise(mean_exp = mean(expenditure)) %>% 
   ggplot(aes(fill = mean_exp)) + 
-  geom_sf(colour = "grey90", size = 0.1) +
+  geom_sf(colour = "white", linewidth = 0.04) +
   labs(
     x = "Longitude",
     y = "Latitude",
@@ -270,7 +270,7 @@ regional_data_joined %>%
   group_by(local_authority) %>% 
   summarise(mean_nights_per_visit = mean(nights_per_visit, na.rm = TRUE)) %>%
   ggplot(aes(fill = mean_nights_per_visit)) + 
-  geom_sf(colour = "grey90", size = 0.1) +
+  geom_sf(colour = "white", linewidth = 0.04) +
   labs(
     x = "Longitude",
     y = "Latitude",
@@ -329,7 +329,7 @@ regional_data_joined_sco_eng %>%
   group_by(local_authority) %>%
   summarise(mean_visits = mean(visits)) %>% 
   ggplot(aes(fill = mean_visits)) + 
-  geom_sf(colour = "grey90", size = 0.1) +
+  geom_sf(colour = "white", linewidth = 0.04) +
   labs(
     x = "Longitude",
     y = "Latitude",
@@ -351,7 +351,7 @@ regional_data_joined_sco_eng %>%
   group_by(local_authority) %>%
   summarise(mean_visits = mean(visits)) %>% 
   ggplot(aes(fill = mean_visits)) + 
-  geom_sf(colour = "grey90", size = 0.5) +
+  geom_sf(colour = "white", linewidth = 0.04) +
   labs(
     x = "Longitude",
     y = "Latitude",

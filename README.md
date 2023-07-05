@@ -34,9 +34,21 @@ identified:
 
 ## Screenshots
 
-![](images/dt_by_region.png)
+*Full Presentation Available*
 
-![](images/cs_1.png)
+[FULL PRESENTATION](https://github.com/stenhousestuart/visit_scotland_codeclan_project/blob/main/presentation.pdf)
+
+![](images/annual_visits_by_region.png)
+
+![](images/case_study_1_a.png)
+
+![](images/case_study_1_b.png)
+
+![](images/gross_value_added.png)
+
+![](images/visits_expenditure_over_time.png)
+
+![](images/international_expenditure_per_visit.png)
 
 ------------------------------------------------------------------------
 
